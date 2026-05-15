@@ -7,9 +7,6 @@ const UpcomingAppointmentCard = ({ appointment, isLoading }) => {
 
   // 🔥 THE DEBUGGER: This will print the exact JSON to your browser console!
   useEffect(() => {
-    if (!isLoading) {
-      console.log("🚨 INCOMING APPOINTMENT DATA:", appointment);
-    }
   }, [appointment, isLoading]);
 
   if (isLoading) {

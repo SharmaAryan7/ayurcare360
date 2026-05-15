@@ -91,7 +91,7 @@ const PatientAppointments = () => {
   );
 
   return (
-    <div className="max-w-[1600px] mx-auto p-10 bg-[#FDF9EE] min-h-full">
+    <div className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-10 bg-[#FDF9EE] min-h-full">
       <AppointmentsHeader />
 
       {error && (

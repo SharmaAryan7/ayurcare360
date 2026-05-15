@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom'; // 🔥 IMPORT ADDED
+import { useOutletContext } from 'react-router-dom';
 import { patientApi } from '../../api/patientApi';
 import PatientProfileSummary from '../../components/patient/dashboard/PatientProfileSummary';
 import UpcomingAppointmentCard from '../../components/patient/dashboard/UpcomingAppointmentCard';
@@ -9,7 +9,6 @@ import MedicalHistory from '../../components/patient/dashboard/MedicalHistory';
 import QuickMetrics from '../../components/patient/dashboard/QuickMetrics';
 
 const PatientDashboard = () => {
-  // Grab the profile from the Layout to prevent a duplicate DB call!
   const { globalProfile, isLoadingProfile } = useOutletContext();
 
   const [location, setLocation] = useState(undefined);
@@ -21,7 +20,6 @@ const PatientDashboard = () => {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      // Batch 1 - Critical Data 
       await Promise.all([
         patientApi.getProfileContact()
           .then(data => {
@@ -39,7 +37,6 @@ const PatientDashboard = () => {
           .catch(err => { console.error(err); setUpcoming(null); })
       ]);
 
-      // Batch 2 - Secondary Data (Charts & Metrics)
       await Promise.all([
         patientApi.getDashWeightTracker()
           .then(data => setWeightData(data || []))
@@ -63,11 +60,11 @@ const PatientDashboard = () => {
   }, []);
 
   return (
-    <div className="max-w-[1600px] mx-auto p-10 bg-[#FDF9EE] min-h-full">
+    // Responsive padding: smaller on mobile, larger on desktop
+    <div className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-10 bg-[#FDF9EE] min-h-full">
       {/* Top Row: Profile & Appointment */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-6 lg:mb-10">
         <div className="lg:col-span-2">
-          {/* Using globalProfile and isLoadingProfile from Outlet context */}
           <PatientProfileSummary
             profile={globalProfile || {}}
             location={location}
@@ -83,7 +80,7 @@ const PatientDashboard = () => {
       </div>
 
       {/* Middle Row: Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 lg:mb-10">
         <WeightTracker
           weightData={weightData || []}
           profileWeight={globalProfile?.weight_kg}
@@ -96,7 +93,7 @@ const PatientDashboard = () => {
       </div>
 
       {/* Bottom Row: Medical History & Metrics */}
-      <div className="flex flex-col gap-8 pb-2">
+      <div className="flex flex-col gap-4 sm:gap-6 lg:gap-8 pb-4 lg:pb-2">
         <MedicalHistory
           history={history || {}}
           isLoading={history === undefined}

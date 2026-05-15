@@ -25,7 +25,6 @@ const OrderHistoryList = ({ orders = [] }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Map Backend statuses to UI colors
   const getStatusColor = (status) => {
     const s = status?.toUpperCase() || '';
     if (s.includes('DELIVERED')) return 'bg-[#E7F3EB] text-[#3A6447]';
@@ -34,11 +33,8 @@ const OrderHistoryList = ({ orders = [] }) => {
     return 'bg-gray-100 text-gray-600';
   };
 
-  // Map Database objects to UI representation
   let processedOrders = orders.map(order => {
-    // 🚨 FIX: Safely fallback to order_id or orderId if id is undefined
     const actualId = order.id || order.order_id || order.orderId;
-
     return {
       id: `AC-${actualId}`,
       rawId: actualId,
@@ -51,13 +47,11 @@ const OrderHistoryList = ({ orders = [] }) => {
     };
   });
 
-  // Filtering
   processedOrders = processedOrders.filter(order => {
     if (activeFilter === 'All') return true;
     return order.status === activeFilter.toUpperCase();
   });
 
-  // Sorting
   processedOrders = processedOrders.sort((a, b) => {
     switch (activeSort) {
       case 'Date: Newest First': return b.rawDate - a.rawDate;
@@ -108,16 +102,16 @@ const OrderHistoryList = ({ orders = [] }) => {
   const isFiltering = activeFilter !== 'All' || activeSort !== 'Date: Newest First';
 
   return (
-    <div className="bg-white rounded-[32px] p-8 border border-[#EFEBE1] shadow-sm flex flex-col h-full">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 relative">
-        <h2 className="text-xl font-bold text-gray-900">Order History</h2>
-        <div className="flex items-center gap-3">
-          <div className="relative" ref={dropdownRef}>
+    <div className="bg-white rounded-[24px] md:rounded-[32px] p-5 md:p-8 border border-[#EFEBE1] shadow-sm flex flex-col h-full">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8 gap-4 relative">
+        <h2 className="text-lg md:text-xl font-bold text-gray-900">Order History</h2>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-none" ref={dropdownRef}>
             <button
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-              className={`px-5 py-2.5 border hover:bg-gray-50 text-sm font-bold rounded-full flex items-center gap-2 transition-colors shadow-sm ${isFiltering ? 'bg-[#4A7C59] text-white border-[#4A7C59]' : 'bg-white text-gray-700 border-[#EFEBE1]'}`}
+              className={`w-full sm:w-auto px-4 md:px-5 py-2 md:py-2.5 border hover:bg-gray-50 text-xs md:text-sm font-bold rounded-full flex items-center justify-center gap-2 transition-colors shadow-sm whitespace-nowrap ${isFiltering ? 'bg-[#4A7C59] text-white border-[#4A7C59]' : 'bg-white text-gray-700 border-[#EFEBE1]'}`}
             >
-              <SlidersHorizontal size={16} /> {isFiltering ? 'Filtered' : 'Filter / Sort'}
+              <SlidersHorizontal size={14} className="md:w-4 md:h-4" /> {isFiltering ? 'Filtered' : 'Filter / Sort'}
             </button>
             {showFilterDropdown && (
               <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-[#EFEBE1] z-20 py-2">
@@ -141,49 +135,58 @@ const OrderHistoryList = ({ orders = [] }) => {
               </div>
             )}
           </div>
-          <button onClick={handleExportPDF} className="px-5 py-2.5 bg-white border border-[#EFEBE1] hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-full flex items-center gap-2 shadow-sm">
-            <Download size={16} /> Export All
+          <button onClick={handleExportPDF} className="flex-1 sm:flex-none px-4 md:px-5 py-2 md:py-2.5 bg-white border border-[#EFEBE1] hover:bg-gray-50 text-gray-700 text-xs md:text-sm font-bold rounded-full flex items-center justify-center gap-2 shadow-sm whitespace-nowrap">
+            <Download size={14} className="md:w-4 md:h-4" /> Export All
           </button>
         </div>
       </div>
 
-      <div className="flex items-center text-[11px] font-bold text-gray-400 uppercase tracking-widest pb-4 border-b border-[#EFEBE1]">
-        <div className="w-[20%] pl-2">Order ID</div>
-        <div className="w-[25%]">Date</div>
-        <div className="w-[20%]">Status</div>
-        <div className="w-[15%]">Amount</div>
-        <div className="w-[20%] text-right pr-2">Action</div>
-      </div>
+      {/* HORIZONTAL OVERFLOW WRAPPER: Protects table row alignment on mobile */}
+      <div className="overflow-x-auto custom-scrollbar">
+        <div className="min-w-[600px]">
+          <div className="flex items-center text-[10px] md:text-[11px] font-bold text-gray-400 uppercase tracking-widest pb-3 md:pb-4 border-b border-[#EFEBE1]">
+            <div className="w-[25%] md:w-[20%] pl-2">Order ID</div>
+            <div className="w-[20%] md:w-[25%]">Date</div>
+            <div className="w-[25%] md:w-[20%]">Status</div>
+            <div className="w-[15%]">Amount</div>
+            <div className="w-[15%] md:w-[20%] text-right pr-2">Action</div>
+          </div>
 
-      <div className="flex-1 space-y-2 mt-4 min-h-[340px]">
-        {currentItems.length > 0 ? (
-          currentItems.map((order) => (
-            <div key={order.id} className="flex items-center py-4 border-b border-transparent hover:border-[#EFEBE1] transition-colors group">
-              <div className="w-[20%] pl-2 font-bold text-gray-900 text-sm">{order.id}</div>
-              <div className="w-[25%] text-sm font-medium text-gray-500">{order.date}</div>
-              <div className="w-[20%]"><span className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${order.statusColor}`}>{order.status}</span></div>
-              <div className="w-[15%] text-sm font-bold text-gray-900">{order.amount}</div>
-              <div className="w-[20%] text-right">
-                <button onClick={() => navigate(`/patient/pharmacy-orders/${order.rawId}`)} className="bg-[#3A6447] hover:bg-[#2C4D36] text-white text-xs font-bold py-2.5 px-5 rounded-full shadow-sm">
-                  View Details
-                </button>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="text-center py-20 text-gray-500 font-medium">No orders found.</div>
-        )}
+          <div className="flex-1 space-y-2 mt-4 min-h-[340px]">
+            {currentItems.length > 0 ? (
+              currentItems.map((order) => (
+                <div key={order.id} className="flex items-center py-3 md:py-4 border-b border-transparent hover:border-[#EFEBE1] transition-colors group">
+                  <div className="w-[25%] md:w-[20%] pl-2 font-bold text-gray-900 text-xs md:text-sm truncate pr-2">{order.id}</div>
+                  <div className="w-[20%] md:w-[25%] text-xs md:text-sm font-medium text-gray-500 truncate pr-2">{order.date}</div>
+                  <div className="w-[25%] md:w-[20%]">
+                    <span className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-extrabold uppercase tracking-widest whitespace-nowrap ${order.statusColor}`}>
+                      {order.status}
+                    </span>
+                  </div>
+                  <div className="w-[15%] text-xs md:text-sm font-bold text-gray-900 truncate pr-2">{order.amount}</div>
+                  <div className="w-[15%] md:w-[20%] text-right pr-2">
+                    <button onClick={() => navigate(`/patient/pharmacy-orders/${order.rawId}`)} className="bg-[#3A6447] hover:bg-[#2C4D36] text-white text-[10px] md:text-xs font-bold py-2 md:py-2.5 px-3 md:px-5 rounded-full shadow-sm whitespace-nowrap">
+                      Details
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-16 md:py-20 text-gray-500 font-medium text-sm md:text-base">No orders found.</div>
+            )}
+          </div>
+        </div>
       </div>
 
       {processedOrders.length > 0 && (
-        <div className="flex flex-col md:flex-row justify-between items-center mt-6 pt-6 border-t border-[#EFEBE1] gap-4">
-          <p className="text-xs font-semibold text-gray-500">Showing {startIndex + 1} to {Math.min(startIndex + ITEMS_PER_PAGE, processedOrders.length)} of {processedOrders.length}</p>
-          <div className="flex items-center gap-1 text-sm font-bold">
-            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className={`p-1.5 rounded-full ${currentPage === 1 ? 'text-gray-300' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}><ChevronLeft size={18} /></button>
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-6 pt-4 md:pt-6 border-t border-[#EFEBE1] gap-4">
+          <p className="text-[11px] md:text-xs font-semibold text-gray-500">Showing {startIndex + 1} to {Math.min(startIndex + ITEMS_PER_PAGE, processedOrders.length)} of {processedOrders.length}</p>
+          <div className="flex items-center gap-1 text-xs md:text-sm font-bold">
+            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className={`p-1 md:p-1.5 rounded-full ${currentPage === 1 ? 'text-gray-300' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}><ChevronLeft size={16} className="md:w-5 md:h-5" /></button>
             {Array.from({ length: totalPages }).map((_, i) => (
-              <button key={i} onClick={() => setCurrentPage(i + 1)} className={`w-8 h-8 rounded-full ${currentPage === i + 1 ? 'bg-[#3A6447] text-white' : 'text-gray-600 hover:bg-[#EFEBE1]'}`}>{i + 1}</button>
+              <button key={i} onClick={() => setCurrentPage(i + 1)} className={`w-7 h-7 md:w-8 md:h-8 rounded-full ${currentPage === i + 1 ? 'bg-[#3A6447] text-white' : 'text-gray-600 hover:bg-[#EFEBE1]'}`}>{i + 1}</button>
             ))}
-            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className={`p-1.5 rounded-full ${currentPage === totalPages ? 'text-gray-300' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}><ChevronRight size={18} /></button>
+            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className={`p-1 md:p-1.5 rounded-full ${currentPage === totalPages ? 'text-gray-300' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-100'}`}><ChevronRight size={16} className="md:w-5 md:h-5" /></button>
           </div>
         </div>
       )}

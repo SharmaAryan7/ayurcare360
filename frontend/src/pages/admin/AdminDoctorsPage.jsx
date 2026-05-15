@@ -43,7 +43,7 @@ const AdminDoctorsPage = () => {
   }, []);
 
   // Instantly updates UI upon successful deletion
-const handleDeleteDoctor = async (doctorId) => {
+  const handleDeleteDoctor = async (doctorId) => {
     console.log("STEP 1: Function triggered for Doctor ID:", doctorId); 
 
     try {
@@ -79,14 +79,15 @@ const handleDeleteDoctor = async (doctorId) => {
   }
 
   return (
-    <div className="p-8 md:p-10 max-w-[1600px] mx-auto flex flex-col h-full">
+    // Responsive padding added here
+    <div className="p-4 sm:p-6 md:p-8 lg:p-10 max-w-[1600px] mx-auto flex flex-col h-full overflow-x-hidden">
 
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-[32px] font-extrabold text-gray-900 tracking-tight leading-none mb-2">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl sm:text-3xl md:text-[32px] font-extrabold text-gray-900 tracking-tight leading-none mb-2">
           Doctors
         </h1>
-        <p className="text-sm font-medium text-gray-500">
+        <p className="text-xs sm:text-sm font-medium text-gray-500">
           Manage your medical practitioners and their clinical records.
         </p>
       </div>

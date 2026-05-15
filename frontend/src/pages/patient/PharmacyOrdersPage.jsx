@@ -69,21 +69,22 @@ const PharmacyOrdersPage = () => {
   }, []);
 
   return (
-    <div className="bg-[#FDF9EE] min-h-full p-8 md:p-10 font-sans max-w-[1600px] mx-auto flex flex-col">
-      <div className="mb-10">
-        <h1 className="text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">Pharmacy Orders</h1>
+    // Adjusted padding for mobile (p-4) to save space
+    <div className="bg-[#FDF9EE] min-h-full p-4 sm:p-6 md:p-10 font-sans max-w-[1600px] mx-auto flex flex-col overflow-x-hidden">
+      <div className="mb-6 md:mb-10">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2 md:mb-3 tracking-tight">Pharmacy Orders</h1>
       </div>
 
       <OrderMetricsRow metrics={metrics} />
 
-      <div className="mb-8 flex-1">
+      <div className="mb-6 md:mb-8 flex-1">
         <OrderHistoryList orders={orders} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Pass the calculated data and loading state */}
+      {/* Grid already handles mobile stacking beautifully with grid-cols-1 md:grid-cols-2 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <RefillReminderCard data={refillData} isLoading={isLoadingOrders} />
-        <PharmacyHelpCard />
+        <PharmacyHelpCard isLoading={isLoadingOrders} />
       </div>
     </div>
   );

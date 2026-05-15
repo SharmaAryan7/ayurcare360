@@ -29,88 +29,93 @@ const AppointmentsTable = ({ appointments, loading, activeTab, currentPage, tota
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-[#EFEBE1] overflow-hidden mb-8">
-      <div className="grid grid-cols-12 gap-4 px-8 py-5 border-b border-[#EFEBE1] bg-[#FAFAF8] text-xs font-bold text-gray-400 uppercase tracking-widest">
-        <div className="col-span-4">Doctor</div>
-        <div className="col-span-2">Date</div>
-        <div className="col-span-2">Time</div>
-        <div className="col-span-2">Status</div>
-        <div className="col-span-2 text-right">Action</div>
-      </div>
+      {/* WRAPPER TO PREVENT MOBILE CRUSHING */}
+      <div className="overflow-x-auto custom-scrollbar">
+        <div className="min-w-[800px]">
+          <div className="grid grid-cols-12 gap-4 px-8 py-5 border-b border-[#EFEBE1] bg-[#FAFAF8] text-xs font-bold text-gray-400 uppercase tracking-widest">
+            <div className="col-span-4">Doctor</div>
+            <div className="col-span-2">Date</div>
+            <div className="col-span-2">Time</div>
+            <div className="col-span-2">Status</div>
+            <div className="col-span-2 text-right">Action</div>
+          </div>
 
-      {(!appointments || appointments.length === 0) ? (
-        <div className="text-center py-20 text-gray-500 font-medium text-lg">No appointments found in this category.</div>
-      ) : (
-        <div className="divide-y divide-[#EFEBE1]">
-          {appointments.map((apt) => {
-            const aptDate = new Date(apt.scheduled_at || apt.start_time);
-            const docName = apt.doctorName || apt.doctor_name || 'Dr. Unknown';
-            
-            // THE SUPER FIX: Handling Base64, web links, and local uploads perfectly!
-            const rawAvatar = apt.avatar || apt.profile_image_url || apt.profile_picture;
-            let avatarUrl = null;
-            if (rawAvatar) {
-                if (rawAvatar.startsWith('http') || rawAvatar.startsWith('data:image')) {
-                    avatarUrl = rawAvatar;
-                } else {
-                    const cleanPath = rawAvatar.startsWith('/') ? rawAvatar : `/${rawAvatar}`;
-                    avatarUrl = `http://localhost:5000${cleanPath}`;
-                }
-            }
-
-            return (
-              <div key={apt.id || apt._id} className="grid grid-cols-12 gap-4 px-8 py-6 items-center hover:bg-[#FAFAF8] transition-colors">
+          {(!appointments || appointments.length === 0) ? (
+            <div className="text-center py-20 text-gray-500 font-medium text-lg">No appointments found in this category.</div>
+          ) : (
+            <div className="divide-y divide-[#EFEBE1]">
+              {appointments.map((apt) => {
+                const aptDate = new Date(apt.scheduled_at || apt.start_time);
+                const docName = apt.doctorName || apt.doctor_name || 'Dr. Unknown';
                 
-                <div className="col-span-4 flex items-center gap-4">
-                  {/* THE FIX: Render the Doctor's Image with an onError fallback */}
-                  {avatarUrl ? (
-                    <img 
-                        src={avatarUrl} 
-                        alt="Doctor" 
-                        className="w-12 h-12 rounded-full object-cover border border-[#EFEBE1] shrink-0 shadow-sm"
-                        onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(docName)}&background=EAE5D9&color=4A7C59`;
-                        }}
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-[#EAE5D9] flex items-center justify-center text-[#4A7C59] font-bold border border-[#EFEBE1] shrink-0">
-                       {docName.replace(/^Dr\.\s*/i, '').charAt(0).toUpperCase()}
+                // THE SUPER FIX: Handling Base64, web links, and local uploads perfectly!
+                const rawAvatar = apt.avatar || apt.profile_image_url || apt.profile_picture;
+                let avatarUrl = null;
+                if (rawAvatar) {
+                    if (rawAvatar.startsWith('http') || rawAvatar.startsWith('data:image')) {
+                        avatarUrl = rawAvatar;
+                    } else {
+                        const cleanPath = rawAvatar.startsWith('/') ? rawAvatar : `/${rawAvatar}`;
+                        avatarUrl = `http://localhost:5000${cleanPath}`;
+                    }
+                }
+
+                return (
+                  <div key={apt.id || apt._id} className="grid grid-cols-12 gap-4 px-8 py-6 items-center hover:bg-[#FAFAF8] transition-colors">
+                    
+                    <div className="col-span-4 flex items-center gap-4">
+                      {/* THE FIX: Render the Doctor's Image with an onError fallback */}
+                      {avatarUrl ? (
+                        <img 
+                            src={avatarUrl} 
+                            alt="Doctor" 
+                            className="w-12 h-12 rounded-full object-cover border border-[#EFEBE1] shrink-0 shadow-sm"
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(docName)}&background=EAE5D9&color=4A7C59`;
+                            }}
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-[#EAE5D9] flex items-center justify-center text-[#4A7C59] font-bold border border-[#EFEBE1] shrink-0">
+                           {docName.replace(/^Dr\.\s*/i, '').charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-base font-bold text-gray-900 truncate max-w-[150px] lg:max-w-none">{docName}</p>
+                        <p className="text-sm text-gray-500 font-medium truncate max-w-[150px] lg:max-w-none">{apt.specialty || apt.specialization || 'General'}</p>
+                      </div>
                     </div>
-                  )}
-                  <div>
-                    <p className="text-base font-bold text-gray-900">{docName}</p>
-                    <p className="text-sm text-gray-500 font-medium">{apt.specialty || apt.specialization || 'General'}</p>
+
+                    <div className="col-span-2 text-sm font-semibold text-gray-700">
+                      {!isNaN(aptDate.getTime()) ? aptDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '--'}
+                    </div>
+                    <div className="col-span-2 text-sm font-semibold text-gray-700">
+                      {!isNaN(aptDate.getTime()) ? aptDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '--'}
+                    </div>
+                    <div className="col-span-2">{getStatusBadge(apt.status)}</div>
+
+                    <div className="col-span-2 text-right">
+                      {apt.status?.toLowerCase() === 'cancelled' ? (
+                        <button onClick={() => navigate('/patient/book-appointment')} className="px-6 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors shadow-sm whitespace-nowrap">
+                          Rebook
+                        </button>
+                      ) : (
+                        <button onClick={() => navigate(`/patient/appointments/${apt.id || apt._id}`)} className="px-6 py-2 text-sm font-bold text-white bg-[#4A7C59] rounded-full hover:bg-[#3d6649] transition-colors shadow-sm whitespace-nowrap">
+                          {apt.status?.toLowerCase() === 'completed' ? 'View Summary' : 'View Details'}
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-
-                <div className="col-span-2 text-sm font-semibold text-gray-700">
-                  {!isNaN(aptDate.getTime()) ? aptDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '--'}
-                </div>
-                <div className="col-span-2 text-sm font-semibold text-gray-700">
-                  {!isNaN(aptDate.getTime()) ? aptDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '--'}
-                </div>
-                <div className="col-span-2">{getStatusBadge(apt.status)}</div>
-
-                <div className="col-span-2 text-right">
-                  {apt.status?.toLowerCase() === 'cancelled' ? (
-                    <button onClick={() => navigate('/patient/book-appointment')} className="px-6 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors shadow-sm">
-                      Rebook
-                    </button>
-                  ) : (
-                    <button onClick={() => navigate(`/patient/appointments/${apt.id || apt._id}`)} className="px-6 py-2 text-sm font-bold text-white bg-[#4A7C59] rounded-full hover:bg-[#3d6649] transition-colors shadow-sm">
-                      {apt.status?.toLowerCase() === 'completed' ? 'View Summary' : 'View Details'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Pagination Footer */}
       {totalItems > 0 && (
-        <div className="px-8 py-5 border-t border-[#EFEBE1] flex justify-between items-center bg-[#FAFAF8]">
+        <div className="px-4 md:px-8 py-5 border-t border-[#EFEBE1] flex flex-col sm:flex-row justify-between items-center bg-[#FAFAF8] gap-4 sm:gap-0">
           <span className="text-sm font-semibold text-gray-500">Showing {startItem}-{endItem} of {totalItems}</span>
           <div className="flex gap-2">
             <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"><ChevronLeft size={20} /></button>
