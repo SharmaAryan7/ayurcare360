@@ -1,0 +1,45 @@
+{
+  "name": "ayurcure-backend",
+  "version": "1.0.0",
+  "description": "Backend for AyurCure Digital Ayurveda Platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "migrate": "node database/migrate.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1000.0",
+    "@aws-sdk/s3-request-presigner": "^3.1000.0",
+    "@sendgrid/mail": "^8.1.6",
+    "agora-token": "^2.0.5",
+    "axios": "^1.13.6",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.4.1",
+    "firebase-admin": "^13.10.0",
+    "google-auth-library": "^10.6.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^8.0.1",
+    "pdfkit": "^0.17.2",
+    "pg": "^8.19.0",
+    "razorpay": "^2.9.6",
+    "twilio": "^5.12.2",
+    "winston": "^3.19.0",
+    "xss": "^1.0.15"
+  },
+  "devDependencies": {
+    "morgan": "^1.10.1",
+    "nodemon": "^3.1.14"
+  }
+}

@@ -1,0 +1,36 @@
+# ==========================================
+# 1. System Files
+# ==========================================
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# ==========================================
+# 2. Frontend (React)
+# ==========================================
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# ==========================================
+# 3. Backend (Node.js/PostgreSQL)
+# ==========================================
+backend/node_modules/
+backend/.env
+backend/logs/
+backend/*.log
+backend/database/dump/
+backend/HelperCode.js
+
+# IDE Specific
+.vscode/
+.idea/
+
+# Coverage reports (if using Jest)
+coverage/
