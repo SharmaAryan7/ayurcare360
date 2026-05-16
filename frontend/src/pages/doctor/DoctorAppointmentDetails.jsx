@@ -53,24 +53,27 @@ const DoctorAppointmentDetails = () => {
         );
     }
 
-    if (!patientInfo) return <div className="p-10 text-gray-500">Appointment not found.</div>;
+    if (!patientInfo) return <div className="p-4 sm:p-10 text-gray-500 text-center sm:text-left font-medium">Appointment not found.</div>;
 
     const filteredReports = reports.filter(report =>
         (report.document_name || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    // THE FIX: Check for chief_complaint as well, because that is where the Bypassed Payment logic saves the reason string!
+    const displaySymptoms = symptoms?.pre_consultation_symptoms || symptoms?.chief_complaint || patientInfo?.reason_for_visit || 'No symptoms reported by the patient.';
+
     return (
-        <div className="max-w-[1600px] mx-auto p-10 bg-[#FDF9EE] min-h-full">
-            <div className="mb-10">
-                <h1 className="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">Appointment Details</h1>
-                <div className="flex items-center text-gray-500 text-sm font-bold tracking-wide">
+        <div className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-10 bg-[#FDF9EE] min-h-full overflow-x-hidden">
+            <div className="mb-6 lg:mb-10 text-center sm:text-left">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2 sm:mb-3 tracking-tight">Appointment Details</h1>
+                <div className="flex flex-wrap items-center justify-center sm:justify-start text-gray-500 text-xs sm:text-sm font-bold tracking-wide">
                     <Link to="/doctor/appointments" className="hover:text-[#4A7C59] transition-colors">Appointments</Link>
-                    <ChevronRight size={16} className="mx-2" />
-                    <span className="text-gray-900">{patientInfo.patient_name}</span>
+                    <ChevronRight size={14} className="mx-1 sm:mx-2" />
+                    <span className="text-gray-900 truncate">{patientInfo.patient_name}</span>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
                 <div className="lg:col-span-2">
                     <PatientSummaryCard appointment={patientInfo} />
                 </div>
@@ -78,7 +81,8 @@ const DoctorAppointmentDetails = () => {
                     <ActionSidebar appointment={patientInfo} appointmentId={id} />
                 </div>
                 <div className="lg:col-span-2">
-                    <SymptomsCard symptoms={symptoms?.pre_consultation_symptoms || 'No symptoms reported by the patient.'} />
+                    {/* Pass the properly evaluated symptoms string */}
+                    <SymptomsCard symptoms={displaySymptoms} />
                 </div>
                 <div className="lg:col-span-1">
                     <MedicalInfoCard info={medicalInfo} />

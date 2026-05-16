@@ -1,130 +1,99 @@
-import React, { useEffect } from 'react';
-import { Calendar, Clock, Video, ArrowRight, MapPin, User } from 'lucide-react';
+import React from 'react';
+import { Calendar, Clock, Video, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const UpcomingAppointmentCard = ({ appointment, isLoading }) => {
   const navigate = useNavigate();
 
-  // 🔥 THE DEBUGGER: This will print the exact JSON to your browser console!
-  useEffect(() => {
-  }, [appointment, isLoading]);
-
   if (isLoading) {
     return (
-      <div className="bg-[#3A6447] rounded-[32px] p-8 h-full shadow-md animate-pulse flex flex-col justify-between min-h-[280px]">
-        <div className="h-4 bg-white/20 rounded w-32 mb-6"></div>
-        <div className="h-8 bg-white/20 rounded w-3/4 mb-4"></div>
-        <div className="h-12 bg-white/20 rounded-2xl w-full mb-6"></div>
-        <div className="h-12 bg-white/20 rounded-full w-full"></div>
+      <div className="bg-[#4A7C59] rounded-[24px] md:rounded-[32px] p-6 md:p-8 h-full flex flex-col shadow-sm animate-pulse min-h-[240px]">
+        <div className="h-4 bg-white/20 rounded w-1/3 mb-6"></div>
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-12 h-12 bg-white/20 rounded-full shrink-0"></div>
+          <div className="space-y-2 flex-1">
+            <div className="h-4 bg-white/20 rounded w-3/4"></div>
+            <div className="h-3 bg-white/20 rounded w-1/2"></div>
+          </div>
+        </div>
+        <div className="space-y-3 mt-auto">
+          <div className="h-3 bg-white/20 rounded w-full"></div>
+          <div className="h-3 bg-white/20 rounded w-5/6"></div>
+        </div>
       </div>
     );
   }
 
-  // If no upcoming appointment is returned from the DB
-  if (!appointment || (!appointment.id && !appointment._id)) {
+  if (!appointment) {
     return (
-      <div className="bg-[#3A6447] rounded-[32px] p-8 h-full text-white flex flex-col justify-center items-center text-center shadow-md relative overflow-hidden min-h-[280px]">
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-white opacity-5 rounded-full blur-2xl"></div>
-        <Calendar size={48} className="text-white/40 mb-4" />
-        <h3 className="text-xl font-bold mb-2">No Upcoming Sessions</h3>
-        <p className="text-white/70 text-sm mb-6">Schedule a consultation to maintain your wellness routine.</p>
-        <button
-          onClick={() => navigate('/patient/book-appointment')}
-          className="bg-[#EBCB8B] hover:bg-[#d4b476] text-gray-900 text-sm font-bold py-3 px-6 rounded-full w-full transition-colors"
-        >
-          Book Appointment
-        </button>
+      <div className="bg-[#4A7C59] rounded-[24px] md:rounded-[32px] p-6 md:p-8 h-full flex flex-col shadow-sm text-white relative overflow-hidden min-h-[240px]">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-[100px] pointer-events-none"></div>
+        <h3 className="text-sm font-bold uppercase tracking-widest text-white/70 mb-2 relative z-10">Next Consultation</h3>
+        <div className="flex-1 flex flex-col items-center justify-center text-center mt-4 relative z-10">
+          <Calendar size={32} className="text-white/40 mb-3" />
+          <p className="text-base font-bold mb-1">No Upcoming Sessions</p>
+          <p className="text-xs text-white/70 mb-6 max-w-[200px]">You don't have any future appointments scheduled.</p>
+          <button 
+            onClick={() => navigate('/patient/book-appointment')}
+            className="bg-white text-[#4A7C59] px-6 py-2.5 rounded-full text-xs font-bold shadow-sm hover:bg-gray-50 transition-colors whitespace-nowrap"
+          >
+            Book Appointment
+          </button>
+        </div>
       </div>
     );
   }
 
-  const aptDate = new Date(appointment?.scheduled_at || appointment?.start_time);
-  
-  // THE SUPER FIX: Check for every possible image variable name, just like the Doctor Selection Card!
-  // THE SUPER FIX: Handle Base64 strings, external HTTP links, AND local uploads!
-  const rawAvatar = appointment?.avatar || appointment?.profile_image_url || appointment?.profile_picture;
-  
-  let avatarUrl = null;
-  if (rawAvatar) {
-      // If it's a web link OR a Base64 image string, use it exactly as is!
-      if (rawAvatar.startsWith('http') || rawAvatar.startsWith('data:image')) {
-          avatarUrl = rawAvatar;
-      } else {
-          // Otherwise, it's a local folder path, so attach the backend port
-          const cleanPath = rawAvatar.startsWith('/') ? rawAvatar : `/${rawAvatar}`;
-          avatarUrl = `http://localhost:5000${cleanPath}`;
-      }
-  }
-  
-  const docName = appointment?.doctorName || appointment?.doctor_name || 'Practitioner';
-  const specialty = appointment?.specialty || appointment?.specialization || 'Consultation';
-
-  // Fallback initial generator
-  const getInitial = (name) => {
-    if (!name) return <User size={20} />;
-    return name.replace(/^Dr\.\s*/i, '').charAt(0).toUpperCase();
-  };
+  // THE FIX: Parse the ISO timestamp directly safely!
+  const appointmentDate = new Date(appointment.scheduled_at);
+  const dateStr = appointmentDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const timeStr = appointmentDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
   return (
-    <div className="bg-[#3A6447] rounded-[32px] p-8 h-full text-white flex flex-col justify-between shadow-md relative overflow-hidden group min-h-[280px]">
-      <div className="absolute -top-20 -right-20 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl group-hover:opacity-10 transition-opacity duration-700"></div>
+    <div className="bg-[#4A7C59] rounded-[24px] md:rounded-[32px] p-6 md:p-8 h-full flex flex-col shadow-sm text-white relative overflow-hidden min-h-[240px] transition-transform hover:-translate-y-1 duration-300">
+      <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-bl-full pointer-events-none"></div>
+      
+      <div className="flex justify-between items-start mb-6 relative z-10">
+        <h3 className="text-[10px] md:text-xs font-extrabold uppercase tracking-widest text-white/70">Next Consultation</h3>
+        <span className="bg-white/20 px-3 py-1 rounded-full text-[9px] md:text-[10px] font-bold tracking-wider backdrop-blur-sm">
+          {appointment.mode === 'Video' ? 'Online' : 'In-Person'}
+        </span>
+      </div>
 
-      <div>
-        <div className="flex justify-between items-center mb-6 relative z-10">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-[#EBCB8B] flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-[#EBCB8B] rounded-full animate-pulse"></div>
-            Next Session
-          </span>
-          {appointment?.mode === 'Video' || appointment?.type === 'video' ? <Video size={16} className="text-white/70" /> : <MapPin size={16} className="text-white/70" />}
-        </div>
-
-        <div className="flex items-center gap-4 mb-6 relative z-10">
-            {avatarUrl ? (
-                <img 
-                    src={avatarUrl} 
-                    alt="Doctor" 
-                    className="w-14 h-14 rounded-2xl border-2 rounded-full border-white/20 object-cover shrink-0 shadow-sm bg-white" 
-                />
-            ) : (
-                <div className="w-14 h-14 rounded-2xl bg-[#FDF9EE] flex items-center justify-center shrink-0 border-2 border-white/20 text-2xl font-bold text-[#3A6447] shadow-sm">
-                    {getInitial(docName)}
-                </div>
-            )}
-            <div>
-                <h3 className="text-2xl font-extrabold leading-tight mb-1">{docName}</h3>
-                <p className="text-white/70 text-sm font-medium">{specialty}</p>
-            </div>
-        </div>
-
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 flex justify-between items-center border border-white/10 relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-2 rounded-xl"><Calendar size={18} /></div>
-            <div>
-              <p className="text-[10px] text-white/60 font-bold uppercase tracking-wider">Date</p>
-              <p className="font-bold text-sm">
-                {!isNaN(aptDate.getTime()) ? aptDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '--'}
-              </p>
-            </div>
-          </div>
-          <div className="w-px h-8 bg-white/20"></div>
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-2 rounded-xl"><Clock size={18} /></div>
-            <div>
-              <p className="text-[10px] text-white/60 font-bold uppercase tracking-wider">Time</p>
-              <p className="font-bold text-sm">
-                {!isNaN(aptDate.getTime()) ? aptDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '--'}
-              </p>
-            </div>
-          </div>
+      <div className="flex items-center gap-4 mb-6 relative z-10">
+        <img 
+          src={appointment.avatar || `https://ui-avatars.com/api/?name=${appointment.doctorName}&background=E5E7EB&color=4A7C59`} 
+          alt={appointment.doctorName} 
+          className="w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-white/20 object-cover shadow-sm shrink-0 bg-white"
+        />
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg md:text-xl font-extrabold truncate pr-2">{appointment.doctorName}</h2>
+          <p className="text-white/80 text-[10px] md:text-xs font-bold uppercase tracking-wider truncate pr-2">
+            {appointment.specialty || 'General Practitioner'}
+          </p>
         </div>
       </div>
 
-      <button
-        onClick={() => navigate(`/patient/appointments/${appointment?.id || appointment?._id}`)}
-        className="mt-6 w-full bg-white hover:bg-gray-50 text-[#3A6447] font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors shadow-sm relative z-10"
-      >
-        Join Session <ArrowRight size={16} />
-      </button>
+      <div className="bg-white/10 rounded-2xl p-4 mt-auto backdrop-blur-sm border border-white/10 relative z-10">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2 text-sm font-bold">
+            <Calendar size={16} className="text-white/70" />
+            <span>{dateStr}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm font-bold text-[#E8C8A0]">
+            <Clock size={16} />
+            <span>{timeStr}</span>
+          </div>
+        </div>
+
+        <button 
+          onClick={() => navigate('/patient/appointments')}
+          className="w-full bg-[#E8C8A0] hover:bg-[#d5b58e] text-[#4A7C59] py-2.5 rounded-xl text-xs md:text-sm font-extrabold transition-colors shadow-sm mt-1 flex items-center justify-center gap-2"
+        >
+          {appointment.mode === 'Video' ? <Video size={16} /> : <User size={16} />}
+          View Details
+        </button>
+      </div>
     </div>
   );
 };
