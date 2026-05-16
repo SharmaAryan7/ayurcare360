@@ -30,17 +30,32 @@ const PatientAppointmentDetails = () => {
             if (!id) return;
             try {
                 setLoading(true);
-                // THE FIX: Fetch everything at once and WAIT for it all to finish!
-                const [actionsData, symptomsData, practitionerData, documentsData] = await Promise.all([
+                let [actionsData, symptomsData, practitionerData, documentsData] = await Promise.all([
                     appointmentApi.getActions(id),
                     appointmentApi.getSymptoms(id),
                     appointmentApi.getPractitionerInfo(id),
-                    appointmentApi.getDocuments(id).catch(() => []) // Fallback to empty array if no docs
+                    appointmentApi.getDocuments(id).catch(() => [])
                 ]);
 
-                // THE DEBUGGER: Check your browser console to ensure the data is arriving!
-                console.log("🚨 ACTIONS DATA:", actionsData);
-                console.log("🚨 PRACTITIONER DATA:", practitionerData);
+                // FRONTEND TIME-CHECK LOGIC (Override Status if time has passed)
+                if (actionsData && (actionsData.status === 'Scheduled' || actionsData.status === 'Pending')) {
+                    const now = new Date();
+                    const dateStr = actionsData.appointment_date || actionsData.date || actionsData.start_time;
+                    const timeStr = actionsData.appointment_time || actionsData.time || '';
+
+                    if (dateStr) {
+                        const cleanDate = dateStr.split('T')[0];
+                        const fullDateTimeStr = timeStr ? `${cleanDate}T${timeStr}` : cleanDate;
+                        const aptDate = new Date(fullDateTimeStr);
+
+                        // Add 60 minutes buffer
+                        const completionTime = new Date(aptDate.getTime() + (35 * 60 * 1000));
+
+                        if (now > completionTime) {
+                            actionsData = { ...actionsData, status: 'Completed' };
+                        }
+                    }
+                }
 
                 setActions(actionsData);
                 setSymptoms(symptomsData);
@@ -58,12 +73,10 @@ const PatientAppointmentDetails = () => {
     const handleConfirmCancellation = async () => {
         try {
             setIsCancelling(true);
-            // THE FIX: Hit the new cancel API route!
             await appointmentApi.cancelAppointment(id);
             setIsCancelModalOpen(false);
             setIsCancelSuccessOpen(true);
             
-            // Update local state so UI instantly shows "Cancelled" without refreshing
             setActions(prev => ({ ...prev, status: 'Cancelled' }));
         } catch (error) {
             console.error("Cancel Error:", error);
@@ -112,7 +125,6 @@ const PatientAppointmentDetails = () => {
                 </div>
 
                 <div className="lg:col-span-1">
-                    {/* Sidebar explicitly receives onCancelClick */}
                     {actions ? <PatientActionSidebar actions={actions} onCancelClick={() => setIsCancelModalOpen(true)} /> : null}
                 </div>
 

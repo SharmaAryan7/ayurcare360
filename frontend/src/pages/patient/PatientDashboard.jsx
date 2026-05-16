@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom'; 
 import { patientApi } from '../../api/patientApi';
-import { appointmentApi } from '../../api/appointmentApi'; // INJECTED MAIN APPOINTMENT API
+import { appointmentApi } from '../../api/appointmentApi'; 
 
 import PatientProfileSummary from '../../components/patient/dashboard/PatientProfileSummary';
 import UpcomingAppointmentCard from '../../components/patient/dashboard/UpcomingAppointmentCard';
@@ -11,7 +11,6 @@ import MedicalHistory from '../../components/patient/dashboard/MedicalHistory';
 import QuickMetrics from '../../components/patient/dashboard/QuickMetrics';
 
 const PatientDashboard = () => {
-  // Grab the profile from the Layout to prevent a duplicate DB call
   const { globalProfile, isLoadingProfile } = useOutletContext();
 
   const [location, setLocation] = useState(undefined);
@@ -36,41 +35,74 @@ const PatientDashboard = () => {
         })
         .catch(() => setLocation(null));
 
-      // 2. THE FRONTEND FIX: Fetch from main Appointment API instead of restricted Dashboard API
+      // 2. Fetch Appointments & Apply the 35-minute Frontend Auto-Complete logic!
       appointmentApi.getUpcoming()
         .then(res => {
-          // Extract the array of appointments regardless of backend wrapper format
           const appointments = res.appointments || res.data || res || [];
+          const now = new Date();
           
-          // Filter for active appointments (Scheduled)
-          const scheduledAppts = appointments.filter(a => a.status === 'Scheduled' || a.status === 'Pending' || a.status === 'Confirmed');
+          // Filter out cancelled/completed AND anything past the 35-minute mark
+          const trulyUpcomingAppts = appointments.filter(apt => {
+            const currentStatus = apt.status || apt.appointment_status;
+            
+            // Step 1: Must be active
+            if (currentStatus !== 'Scheduled' && currentStatus !== 'Pending' && currentStatus !== 'Confirmed') {
+                return false;
+            }
+
+            // Step 2: Parse date safely
+            let aptDate = null;
+            if (apt.start_time || apt.scheduled_at) {
+                aptDate = new Date(apt.start_time || apt.scheduled_at);
+            } else {
+                const dateStr = apt.appointment_date || apt.date;
+                const timeStr = apt.appointment_time || apt.time;
+                if (dateStr && timeStr) {
+                    const cleanDate = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+                    aptDate = new Date(`${cleanDate}T${timeStr.trim()}`);
+                } else if (dateStr) {
+                    aptDate = new Date(dateStr);
+                }
+            }
+
+            // Step 3: Check against the 35-minute buffer
+            if (aptDate && !isNaN(aptDate.getTime())) {
+                const completionTime = new Date(aptDate.getTime() + (35 * 60 * 1000));
+                // If now is GREATER than completion time, this appointment is "Completed" -> Filter it OUT
+                if (now > completionTime) {
+                    return false;
+                }
+            }
+            
+            return true; // Keep it if it hasn't expired yet!
+          });
           
-          if (scheduledAppts.length > 0) {
-            // Sort them purely on the frontend to find the nearest one in time
-            scheduledAppts.sort((a, b) => {
-              const dateA = new Date(`${(a.appointment_date || '').split('T')[0]}T${a.appointment_time || '00:00:00'}`);
-              const dateB = new Date(`${(b.appointment_date || '').split('T')[0]}T${b.appointment_time || '00:00:00'}`);
+          if (trulyUpcomingAppts.length > 0) {
+            // Sort to find the NEXT nearest appointment
+            trulyUpcomingAppts.sort((a, b) => {
+              const dateA = new Date(`${(a.appointment_date || a.date || '').split('T')[0]}T${a.appointment_time || a.time || '00:00:00'}`);
+              const dateB = new Date(`${(b.appointment_date || b.date || '').split('T')[0]}T${b.appointment_time || b.time || '00:00:00'}`);
               return dateA - dateB;
             });
 
-            const next = scheduledAppts[0];
+            const next = trulyUpcomingAppts[0];
             
-            // Format the date string safely for the card
+            // Format for the UI Card
             let scheduledAtDate = new Date();
             if (next.appointment_date && next.appointment_time) {
-                scheduledAtDate = new Date(`${next.appointment_date.split('T')[0]}T${next.appointment_time}`);
+                const cleanDate = next.appointment_date.includes('T') ? next.appointment_date.split('T')[0] : next.appointment_date;
+                scheduledAtDate = new Date(`${cleanDate}T${next.appointment_time.trim()}`);
             } else if (next.start_time || next.scheduled_at) {
                 scheduledAtDate = new Date(next.start_time || next.scheduled_at);
             }
 
-            // Map the data exactly how UpcomingAppointmentCard expects it
             setUpcoming({
               id: next.id || next.appointment_id,
               scheduled_at: scheduledAtDate.toISOString(),
               mode: next.consultation_type || next.mode || 'Video',
               doctorName: next.doctor_name || next.doctorName || 'Your Doctor',
               specialty: next.specialization || next.specialty || 'Ayurvedic Practitioner',
-              avatar: next.doctor_avatar || next.avatar || next.profile_image_url || null
+              avatar: next.patient_avatar || next.avatar || next.profile_image_url || next.patient_image || null
             });
           } else {
             setUpcoming(null);

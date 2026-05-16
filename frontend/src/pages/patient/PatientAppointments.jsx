@@ -10,25 +10,64 @@ const PatientAppointments = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Filter States
   const [activeTab, setActiveTab] = useState('all');
   const [isThisMonth, setIsThisMonth] = useState(false);
   const [filterText, setFilterText] = useState('');
 
-  // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4; // You can increase this to 10 if you prefer
+  const itemsPerPage = 4;
 
-  // 1. Fetch ALL appointments exactly ONCE on component mount
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
         setLoading(true);
         const response = await appointmentApi.getAll();
-
-        // Safely extract the array regardless of how the backend formats the JSON response
         const dataArray = response.appointments || response.data || response || [];
-        setAppointmentsData(Array.isArray(dataArray) ? dataArray : []);
+        const validArray = Array.isArray(dataArray) ? dataArray : [];
+
+        // FRONTEND TIME-CHECK LOGIC (Bullet-proof Date Parser)
+        const now = new Date();
+        const processedArray = validArray.map(apt => {
+          
+          // Check both status keys just in case
+          const currentStatus = apt.status || apt.appointment_status;
+          
+          if (currentStatus === 'Scheduled' || currentStatus === 'Pending') {
+            let aptDate = null;
+
+            // 1. Try to parse an exact ISO timestamp if available
+            if (apt.start_time || apt.scheduled_at) {
+                aptDate = new Date(apt.start_time || apt.scheduled_at);
+            } 
+            // 2. Try to combine split Date and Time fields
+            else {
+                const dateStr = apt.appointment_date || apt.date;
+                const timeStr = apt.appointment_time || apt.time;
+                
+                if (dateStr && timeStr) {
+                    const cleanDate = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+                    // Combine date and time cleanly
+                    aptDate = new Date(`${cleanDate}T${timeStr.trim()}`);
+                } else if (dateStr) {
+                    aptDate = new Date(dateStr);
+                }
+            }
+
+            // ONLY apply the override if the Date successfully parsed
+            if (aptDate && !isNaN(aptDate.getTime())) {
+                // Add 35 minutes (30 min consultation + 5 min buffer)
+                const completionTime = new Date(aptDate.getTime() + (35 * 60 * 1000));
+
+                if (now > completionTime) {
+                    // Override BOTH possible status keys to guarantee the UI catches it
+                    return { ...apt, status: 'Completed', appointment_status: 'Completed' }; 
+                }
+            }
+          }
+          return apt;
+        });
+
+        setAppointmentsData(processedArray);
       } catch (err) {
         console.error("Failed to fetch appointments:", err);
         setError("Failed to load appointments.");
@@ -39,8 +78,6 @@ const PatientAppointments = () => {
     fetchAppointments();
   }, []);
 
-  // 2. High-Performance Filtering using useMemo
-  // This automatically recalculates ONLY when filters or data change
   const allFilteredAppointments = useMemo(() => {
     if (!appointmentsData || appointmentsData.length === 0) return [];
 
@@ -49,22 +86,20 @@ const PatientAppointments = () => {
     const currentYear = currentDate.getFullYear();
 
     return appointmentsData.filter(apt => {
-      const status = apt.status?.toLowerCase() || '';
+      // Check the overridden status
+      const status = (apt.status || apt.appointment_status || '').toLowerCase();
 
-      // A. Tab Filter: Handle "Scheduled" vs "Upcoming"
       if (activeTab !== 'all') {
-        if (activeTab === 'upcoming' && status !== 'scheduled' && status !== 'upcoming') return false;
+        if (activeTab === 'upcoming' && status !== 'scheduled' && status !== 'upcoming' && status !== 'pending') return false;
         if (activeTab === 'completed' && status !== 'completed') return false;
         if (activeTab === 'cancelled' && status !== 'cancelled') return false;
       }
 
-      // B. Month Filter
-      if (isThisMonth && (apt.date || apt.scheduled_at || apt.start_time)) {
-        const aptDate = new Date(apt.date || apt.scheduled_at || apt.start_time);
+      if (isThisMonth && (apt.appointment_date || apt.date || apt.scheduled_at || apt.start_time)) {
+        const aptDate = new Date(apt.appointment_date || apt.date || apt.scheduled_at || apt.start_time);
         if (aptDate.getMonth() !== currentMonth || aptDate.getFullYear() !== currentYear) return false;
       }
 
-      // C. Search Filter (Doctor Name & Specialty)
       if (filterText.trim() !== '') {
         const query = filterText.toLowerCase();
         const docName = (apt.doctorName || apt.doctor_name || '').toLowerCase();
@@ -77,12 +112,10 @@ const PatientAppointments = () => {
     });
   }, [appointmentsData, activeTab, isThisMonth, filterText]);
 
-  // 3. Reset to Page 1 whenever a filter is changed
   useEffect(() => {
     setCurrentPage(1);
   }, [activeTab, isThisMonth, filterText]);
 
-  // 4. Client-Side Pagination Math
   const totalItems = allFilteredAppointments.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
   const paginatedAppointments = allFilteredAppointments.slice(
