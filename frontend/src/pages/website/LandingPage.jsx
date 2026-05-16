@@ -488,9 +488,9 @@ const LandingPage = ({ isLoggedIn: propIsLoggedIn, userRole: propUserRole, onLog
           </div>
           <ScrollReveal>
             <div className="flex flex-col items-center gap-8">
-              <Link to="/about" className="inline-flex items-center gap-2 text-[#2F6F4E] font-bold text-lg md:text-xl hover:underline underline-offset-4">
+              {/* <Link to="/about" className="inline-flex items-center gap-2 text-[#2F6F4E] font-bold text-lg md:text-xl hover:underline underline-offset-4">
                 View all conditions <span className="material-symbols-outlined">arrow_forward</span>
-              </Link>
+              </Link> */}
               <button onClick={handleHeroAction} className="bg-[#2F6F4E] text-white px-8 py-4 rounded-xl font-['Noto_Serif'] font-bold text-xl shadow-lg hover:scale-105 transition-transform">
                 {fromStickyLogo ? 'Go to Dashboard' : (isLoggedIn ? 'Go to Dashboard' : 'Start Healing for Your Condition')}
               </button>
@@ -674,7 +674,7 @@ const LandingPage = ({ isLoggedIn: propIsLoggedIn, userRole: propUserRole, onLog
           {/* Navigation Links */}
           <nav className="flex flex-wrap justify-center gap-x-6 md:gap-x-12 gap-y-4 mb-8">
             <Link to="/blogs" className="text-[#376645] font-['Inter'] text-sm md:text-base font-medium hover:opacity-70 transition-opacity">The Herbarium</Link>
-            <Link to="/about" className="text-[#376645] font-['Inter'] text-sm md:text-base font-medium hover:opacity-70 transition-opacity">Dosha Quiz</Link>
+            {/* <Link to="/about" className="text-[#376645] font-['Inter'] text-sm md:text-base font-medium hover:opacity-70 transition-opacity">Dosha Quiz</Link> */}
             <Link to="/privacy" className="text-[#376645] font-['Inter'] text-sm md:text-base font-medium hover:opacity-70 transition-opacity">Privacy Policy</Link>
             <Link to="/login" className="text-[#376645] font-['Inter'] text-sm md:text-base font-medium hover:opacity-70 transition-opacity">Practitioner Login</Link>
           </nav>
