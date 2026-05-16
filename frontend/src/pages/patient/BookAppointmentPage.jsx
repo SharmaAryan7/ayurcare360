@@ -74,7 +74,7 @@ const BookAppointmentPage = () => {
   const totalAmount = (baseFee + taxAmount).toFixed(2);
 
   const handleConfirmAppointment = (e) => {
-    e.preventDefault(); // 1. Prevent any accidental page refreshes
+    e.preventDefault(); 
     if (!selectedDoctorId || !selectedTime || !reason.trim()) return;
 
     const payload = {
@@ -92,11 +92,12 @@ const BookAppointmentPage = () => {
       }
     };
 
-    // 2. Fail-safe: Store in sessionStorage in case the router drops the state object
     sessionStorage.setItem('pendingAppointment', JSON.stringify(payload));
-
-    // 3. Navigate
-    navigate('/patient/consultation/payment', { state: payload });
+    
+    // THE FIX: We MUST pass "fromAppointmentSetup: true" so StrictFlowRoute doesn't block us!
+    navigate('/patient/consultation/payment', { 
+      state: { ...payload, fromAppointmentSetup: true } 
+    });
   };
 
   if (loading) return <div className="flex items-center justify-center min-h-screen bg-[#FDF9EE]"><Loader2 className="w-10 h-10 text-green-700 animate-spin" /></div>;
@@ -186,10 +187,10 @@ const BookAppointmentPage = () => {
                 }`}
             >
               <ShieldCheck size={18} />
-              Proceed to Payment
+              Review & Confirm Booking
             </button>
             <p className="text-[10px] text-gray-400 text-center mt-4 px-4 leading-relaxed">
-              Secure checkout. You will be redirected to the payment gateway.
+              Review your details on the next page to confirm your booking.
             </p>
           </div>
 

@@ -15,7 +15,6 @@ const PatientLayout = () => {
   const [profile, setProfile] = useState(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   
-  // NEW: State to control the sidebar
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -41,7 +40,7 @@ const PatientLayout = () => {
     return () => window.removeEventListener('avatarUpdated', handleUpdate);
   }, []);
 
-  // Close sidebar automatically when the route changes (user clicks a link)
+  // Close sidebar automatically when the route changes (only affects mobile)
   useEffect(() => {
     setIsSidebarOpen(false);
   }, [location.pathname]);
@@ -79,19 +78,19 @@ const PatientLayout = () => {
 
   return (
     <div className="flex h-screen bg-[#FDF9EE] font-sans overflow-hidden">
-      {/* Sidebar now accepts props to control its open/close state */}
       <PatientSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      <main className="flex-1 flex flex-col w-full h-full relative">
+      {/* Added lg:ml-[18rem] to accommodate the sm:w-72 sidebar on desktop */}
+      <main className="flex-1 flex flex-col w-full h-full relative lg:ml-[18rem] transition-all duration-300">
         {/* Responsive Header */}
         <header className="h-16 md:h-20 lg:h-24 px-4 md:px-6 lg:px-10 flex items-center justify-between border-b border-gray-200 shrink-0 shadow-sm z-10 bg-[#FDF9EE]">
 
           {/* Left Side: Hamburger & Search */}
           <div className="flex items-center gap-3 md:gap-6 flex-1">
-            {/* The 3-line hamburger menu to open the sidebar */}
+            {/* Hamburger menu hidden on desktop using lg:hidden */}
             <button 
               onClick={() => setIsSidebarOpen(true)}
-              className="p-2 -ml-2 rounded-xl text-gray-700 hover:bg-[#E7F3EB] hover:text-[#4A7C59] transition-colors focus:outline-none"
+              className="lg:hidden p-2 -ml-2 rounded-xl text-gray-700 hover:bg-[#E7F3EB] hover:text-[#4A7C59] transition-colors focus:outline-none"
             >
               <Menu size={24} />
             </button>
@@ -124,7 +123,6 @@ const PatientLayout = () => {
 
           {/* Right Side: Title, Cart, Profile */}
           <div className="flex items-center gap-4 md:gap-6">
-            {/* Title hidden on mobile to save space if search is active */}
             <span className="text-sm md:text-base font-bold text-gray-900 truncate max-w-[120px] md:max-w-none">
               {getPageTitle()}
             </span>
@@ -163,7 +161,7 @@ const PatientLayout = () => {
           </div>
         </header>
 
-        {/* Mobile Search Bar (Shows below header on very small screens) */}
+        {/* Mobile Search Bar */}
         {!isProductDetailsPage && (
           <div className="sm:hidden px-4 py-3 bg-[#FDF9EE] border-b border-gray-100 shrink-0">
              <div className="relative w-full">

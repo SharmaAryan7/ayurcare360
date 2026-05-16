@@ -34,10 +34,10 @@ const AdminTopbar = ({ setIsSidebarOpen }) => {
       <div className="h-16 md:h-20 lg:h-24 px-4 md:px-6 lg:px-10 flex items-center justify-between bg-[#FDF9EE] shrink-0 border-b border-gray-200 z-10 shadow-sm">
         
         <div className="flex items-center gap-3 md:gap-6 flex-1">
-          {/* Hamburger Menu to open Sidebar */}
+          {/* Hamburger Menu (Hidden on Desktop using lg:hidden) */}
           <button 
               onClick={() => setIsSidebarOpen(true)}
-              className="p-2 -ml-2 rounded-xl text-gray-700 hover:bg-[#E7F3EB] hover:text-[#3A6447] transition-colors focus:outline-none"
+              className="lg:hidden p-2 -ml-2 rounded-xl text-gray-700 hover:bg-[#E7F3EB] hover:text-[#3A6447] transition-colors focus:outline-none"
           >
               <Menu size={24} />
           </button>
@@ -76,7 +76,7 @@ const AdminTopbar = ({ setIsSidebarOpen }) => {
         </div>
       </div>
 
-      {/* Mobile Search Bar (Shows below header on very small screens) */}
+      {/* Mobile Search Bar */}
       <div className="sm:hidden px-4 py-3 bg-[#FDF9EE] border-b border-gray-100 shrink-0">
           <form onSubmit={handleSearch} className="relative w-full">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />

@@ -7,7 +7,7 @@ const AdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
 
-  // Close sidebar on route change
+  // Close sidebar on route change (only affects mobile)
   useEffect(() => {
       setIsSidebarOpen(false);
   }, [location.pathname]);
@@ -16,8 +16,8 @@ const AdminLayout = () => {
     <div className="bg-[#FDF9EE] min-h-screen flex font-sans overflow-hidden">
       <AdminSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       
-      {/* Removed ml-64 to allow full width on mobile, and standard flow on desktop */}
-      <div className="flex-1 flex flex-col min-h-screen w-full relative">
+      {/* Added lg:ml-64 to keep content to the right of the permanent desktop sidebar */}
+      <div className="flex-1 flex flex-col min-h-screen w-full relative lg:ml-64 transition-all duration-300">
         <AdminTopbar setIsSidebarOpen={setIsSidebarOpen} />
         
         <main className="flex-1 overflow-x-hidden overflow-y-auto custom-scrollbar relative z-0">

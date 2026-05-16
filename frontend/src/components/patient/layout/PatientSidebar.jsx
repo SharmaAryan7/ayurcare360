@@ -10,7 +10,7 @@ import {
     User,
     Settings,
     LogOut,
-    X // Added close icon
+    X
 } from 'lucide-react';
 
 const PatientSidebar = ({ isOpen, setIsOpen }) => {
@@ -20,7 +20,7 @@ const PatientSidebar = ({ isOpen, setIsOpen }) => {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
         localStorage.removeItem('user');
-        navigate('/LandingPage');
+        navigate('/LandingPage', { replace: true });
     };
 
     const navItems = [
@@ -36,17 +36,17 @@ const PatientSidebar = ({ isOpen, setIsOpen }) => {
 
     return (
         <>
-            {/* Dark Overlay Backdrop - clicks outside the sidebar close it */}
+            {/* Dark Overlay Backdrop (Hidden on Desktop using lg:hidden) */}
             <div 
-                className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-all duration-300 ease-in-out ${
+                className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-all duration-300 ease-in-out ${
                     isOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
                 }`}
                 onClick={() => setIsOpen(false)}
             />
 
-            {/* Sliding Sidebar */}
+            {/* Sliding Sidebar (Always visible on Desktop using lg:translate-x-0) */}
             <aside 
-                className={`fixed top-0 left-0 h-full z-50 w-64 sm:w-72 bg-[#4A7C59] text-white flex flex-col shadow-2xl transform transition-transform duration-300 ease-in-out ${
+                className={`fixed top-0 left-0 h-full z-50 w-64 sm:w-72 bg-[#4A7C59] text-white flex flex-col shadow-2xl lg:shadow-none transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
                     isOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
             >
@@ -61,10 +61,10 @@ const PatientSidebar = ({ isOpen, setIsOpen }) => {
                         <span className="text-lg sm:text-xl font-bold tracking-wide">Ayurcare360</span>
                     </div>
                     
-                    {/* Close Button inside Sidebar */}
+                    {/* Close Button inside Sidebar (Hidden on Desktop) */}
                     <button 
                         onClick={() => setIsOpen(false)}
-                        className="p-2 rounded-xl hover:bg-white/10 text-white/80 hover:text-white transition-colors focus:outline-none"
+                        className="lg:hidden p-2 rounded-xl hover:bg-white/10 text-white/80 hover:text-white transition-colors focus:outline-none"
                     >
                         <X size={20} />
                     </button>
@@ -79,7 +79,7 @@ const PatientSidebar = ({ isOpen, setIsOpen }) => {
                             className={({ isActive }) =>
                                 `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm sm:text-base ${isActive
                                     ? 'bg-white text-[#4A7C59] font-semibold shadow-sm scale-[1.02]'
-                                    : 'text-white/80 hover:bg-white/10 hover:text-white font-medium hover:pl-5' // slight padding shift on hover
+                                    : 'text-white/80 hover:bg-white/10 hover:text-white font-medium hover:pl-5'
                                 }`
                             }
                         >
@@ -104,4 +104,4 @@ const PatientSidebar = ({ isOpen, setIsOpen }) => {
     );
 };
 
-export default PatientSidebar;
+export default PatientSidebar;  

@@ -10,8 +10,6 @@ const DoctorLayout = () => {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [profile, setProfile] = useState(null);
-    
-    // NEW: State to control the sidebar
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // Fetch doctor's basic profile details for the header
@@ -32,7 +30,7 @@ const DoctorLayout = () => {
     // Clear search query automatically when navigating to a different page
     useEffect(() => {
         setSearchQuery('');
-        setIsSidebarOpen(false); // Close sidebar on route change
+        setIsSidebarOpen(false); // Close sidebar on route change (only affects mobile)
     }, [location.pathname]);
 
     const getSearchPlaceholder = () => {
@@ -54,16 +52,17 @@ const DoctorLayout = () => {
         <div className="flex h-screen bg-[#FDF9EE] overflow-hidden font-sans">
             <DoctorSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-            <div className="flex-1 flex flex-col overflow-hidden w-full relative">
+            {/* Added lg:ml-[18rem] to keep content to the right of the permanent desktop sidebar */}
+            <div className="flex-1 flex flex-col overflow-hidden w-full relative lg:ml-[18rem] transition-all duration-300">
                 {/* Responsive Header */}
                 <header className="h-16 md:h-20 lg:h-24 px-4 md:px-6 lg:px-10 flex items-center justify-between bg-[#FDF9EE] shrink-0 border-b border-gray-200 z-10 shadow-sm">
                     
                     {/* Left Side: Hamburger & Search */}
                     <div className="flex items-center gap-3 md:gap-6 flex-1">
-                        {/* The 3-line hamburger menu to open the sidebar */}
+                        {/* Hamburger menu hidden on desktop using lg:hidden */}
                         <button 
                             onClick={() => setIsSidebarOpen(true)}
-                            className="p-2 -ml-2 rounded-xl text-gray-700 hover:bg-[#E7F3EB] hover:text-[#4A7C59] transition-colors focus:outline-none"
+                            className="lg:hidden p-2 -ml-2 rounded-xl text-gray-700 hover:bg-[#E7F3EB] hover:text-[#4A7C59] transition-colors focus:outline-none"
                         >
                             <Menu size={24} />
                         </button>
