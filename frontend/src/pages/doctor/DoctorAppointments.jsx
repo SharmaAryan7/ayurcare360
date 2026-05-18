@@ -28,8 +28,43 @@ const DoctorAppointments = () => {
                     default: res = await doctorApi.getAllAppointments();
                 }
 
+                // THE FIX: Frontend Time-Check logic applied to the array
                 if (res && res.success) {
-                    setAppointments(res.appointments || []);
+                    const now = new Date();
+                    const processedAppointments = (res.appointments || []).map(apt => {
+                        const status = apt.status || 'Scheduled';
+                        if (status === 'Scheduled' || status === 'Pending' || status === 'Confirmed') {
+                            let aptDate = null;
+                            const rawDateStr = apt.appointment_date || apt.start_time;
+                            const rawTimeStr = apt.appointment_time || apt.time;
+
+                            if (rawDateStr) {
+                                if (typeof rawDateStr === 'string' && rawDateStr.includes('T')) {
+                                    aptDate = new Date(rawDateStr); // Keep 'Z' intact
+                                } else if (rawDateStr && rawTimeStr) {
+                                    const cleanDate = rawDateStr.split('T')[0];
+                                    aptDate = new Date(`${cleanDate}T${rawTimeStr.trim()}`);
+                                } else {
+                                    aptDate = new Date(rawDateStr);
+                                }
+                            }
+
+                            if (aptDate && !isNaN(aptDate.getTime())) {
+                                const completionTime = new Date(aptDate.getTime() + (35 * 60 * 1000));
+                                if (now > completionTime) {
+                                    return { ...apt, status: 'Completed' }; // Override to Completed
+                                }
+                            }
+                        }
+                        return apt;
+                    });
+                    
+                    // Extra cleanup to remove 'Completed' from 'Upcoming' tab visually
+                    if (activeTab === 'Upcoming') {
+                        setAppointments(processedAppointments.filter(a => a.status !== 'Completed'));
+                    } else {
+                        setAppointments(processedAppointments);
+                    }
                 } else {
                     setAppointments([]);
                 }

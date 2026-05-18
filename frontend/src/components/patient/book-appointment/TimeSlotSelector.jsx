@@ -19,7 +19,6 @@ const TimeSlotSelector = ({ selectedDate, onDateChange, minDate, maxDate, slots,
     <>
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-bold text-gray-900">Available Slots</h3>
-        {/* THE FIX: Fully functional 7-Day Date Picker! */}
         <input 
             type="date" 
             min={minDate} 
@@ -49,6 +48,39 @@ const TimeSlotSelector = ({ selectedDate, onDateChange, minDate, maxDate, slots,
                 }
             }
 
+            // THE FIX: Strict Frontend Local Time Check
+            if (!isBooked && selectedDate) {
+                const now = new Date();
+                const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                
+                // Only block past times if the selected date is exactly TODAY
+                if (selectedDate === todayStr) {
+                    let hours = 0;
+                    let mins = 0;
+                    
+                    if (slot.rawTime) {
+                        // The backend provides rawTime (e.g. "14:30")
+                        const [h, m] = slot.rawTime.split(':').map(Number);
+                        hours = h;
+                        mins = m;
+                    } else if (timeLabel !== "Invalid Time") {
+                        // Fallback: parse "02:30 PM" format
+                        const timeParts = timeLabel.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                        if (timeParts) {
+                            hours = parseInt(timeParts[1], 10);
+                            mins = parseInt(timeParts[2], 10);
+                            if (timeParts[3].toUpperCase() === 'PM' && hours !== 12) hours += 12;
+                            if (timeParts[3].toUpperCase() === 'AM' && hours === 12) hours = 0;
+                        }
+                    }
+
+                    // Compare exactly using the current local time in the browser
+                    if (now.getHours() > hours || (now.getHours() === hours && now.getMinutes() >= mins)) {
+                        isBooked = true;
+                    }
+                }
+            }
+
             const isSelected = selectedTime === timeLabel;
 
             return (
@@ -65,7 +97,7 @@ const TimeSlotSelector = ({ selectedDate, onDateChange, minDate, maxDate, slots,
                   }`}
               >
                 <span>{timeLabel}</span>
-                {isBooked && <span className="text-[10px] font-normal mt-0.5">(Booked)</span>}
+                {isBooked && <span className="text-[10px] font-normal mt-0.5">(Passed/Booked)</span>}
               </button>
             );
           })}

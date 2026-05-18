@@ -31,8 +31,38 @@ const DoctorDashboard = () => {
                 if (ptsRes.success) setTotalPatients(ptsRes.totalPatients);
                 if (todayRes.success) setAppointmentsToday(todayRes.appointmentsToday);
                 if (upcomingRes.success) setUpcomingConsultations(upcomingRes.upcomingConsultations);
-                if (listRes.success) setUpcomingAppointmentsList(listRes.appointments || []);
                 if (earnRes.success) setEarnings(earnRes.earnings);
+
+                // THE FIX: Frontend Time-Check for Dashboard Upcoming List
+                if (listRes.success) {
+                    const now = new Date();
+                    const trulyUpcoming = (listRes.appointments || []).filter(apt => {
+                        const status = apt.status || 'Scheduled';
+                        if (status !== 'Scheduled' && status !== 'Pending' && status !== 'Confirmed') return false;
+
+                        let aptDate = null;
+                        const rawDateStr = apt.appointment_date || apt.start_time;
+                        const rawTimeStr = apt.appointment_time || apt.time;
+
+                        if (rawDateStr) {
+                            if (typeof rawDateStr === 'string' && rawDateStr.includes('T')) {
+                                aptDate = new Date(rawDateStr); // Keep 'Z' intact
+                            } else if (rawDateStr && rawTimeStr) {
+                                const cleanDate = rawDateStr.split('T')[0];
+                                aptDate = new Date(`${cleanDate}T${rawTimeStr.trim()}`);
+                            } else {
+                                aptDate = new Date(rawDateStr);
+                            }
+                        }
+
+                        if (aptDate && !isNaN(aptDate.getTime())) {
+                            const completionTime = new Date(aptDate.getTime() + (35 * 60 * 1000));
+                            if (now > completionTime) return false; // Hide it because 35 minutes passed!
+                        }
+                        return true;
+                    });
+                    setUpcomingAppointmentsList(trulyUpcoming);
+                }
             } catch (error) {
                 console.error("Failed to load dashboard data", error);
             } finally {

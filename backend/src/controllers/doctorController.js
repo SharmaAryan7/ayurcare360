@@ -190,6 +190,24 @@ exports.cancelAppointment = async (req, res) => {
     }
 };
 
+exports.submitPrescription = async (req, res) => {
+    try {
+        // THE FIX: Changed 'DoctorModel' to 'doctorModel'
+        const profile = await doctorModel.getProfileByUserId(req.user.id);
+        if (!profile) return res.status(404).json({ error: 'Doctor not found' });
+        
+        const { id } = req.params; 
+        const { medicines } = req.body;
+        
+        // THE FIX: Changed 'DoctorModel' to 'doctorModel'
+        await doctorModel.submitPrescription(profile.id, id, medicines);
+        res.status(200).json({ success: true });
+    } catch (err) {
+        console.error("PRESCRIPTION DB ERROR:", err); 
+        res.status(500).json({ error: 'Failed to submit prescription' });
+    }
+};
+
 // ==========================================
 // EARNINGS
 // ==========================================

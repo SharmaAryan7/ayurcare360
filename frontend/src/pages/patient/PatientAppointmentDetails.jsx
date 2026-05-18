@@ -37,20 +37,26 @@ const PatientAppointmentDetails = () => {
                     appointmentApi.getDocuments(id).catch(() => [])
                 ]);
 
-                // FRONTEND TIME-CHECK LOGIC (Override Status if time has passed)
+                // FRONTEND TIME-CHECK LOGIC
                 if (actionsData && (actionsData.status === 'Scheduled' || actionsData.status === 'Pending')) {
                     const now = new Date();
-                    const dateStr = actionsData.appointment_date || actionsData.date || actionsData.start_time;
-                    const timeStr = actionsData.appointment_time || actionsData.time || '';
+                    let aptDate = null;
+                    const rawDateStr = actionsData.start_time || actionsData.scheduled_at || actionsData.appointment_date || actionsData.date;
+                    const rawTimeStr = actionsData.appointment_time || actionsData.time;
 
-                    if (dateStr) {
-                        const cleanDate = dateStr.split('T')[0];
-                        const fullDateTimeStr = timeStr ? `${cleanDate}T${timeStr}` : cleanDate;
-                        const aptDate = new Date(fullDateTimeStr);
+                    if (rawDateStr) {
+                        if (typeof rawDateStr === 'string' && rawDateStr.includes('T')) {
+                            aptDate = new Date(rawDateStr); // THE FIX: Left 'Z' intact for proper timezone sync
+                        } else if (rawDateStr && rawTimeStr) {
+                            const cleanDate = rawDateStr.split('T')[0];
+                            aptDate = new Date(`${cleanDate}T${rawTimeStr.trim()}`);
+                        } else {
+                            aptDate = new Date(rawDateStr);
+                        }
+                    }
 
-                        // Add 60 minutes buffer
+                    if (aptDate && !isNaN(aptDate.getTime())) {
                         const completionTime = new Date(aptDate.getTime() + (35 * 60 * 1000));
-
                         if (now > completionTime) {
                             actionsData = { ...actionsData, status: 'Completed' };
                         }

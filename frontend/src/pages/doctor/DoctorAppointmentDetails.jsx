@@ -30,7 +30,37 @@ const DoctorAppointmentDetails = () => {
                     doctorApi.getApptReports(id)
                 ]);
 
-                if (infoRes.success) setPatientInfo(infoRes.info);
+                // THE FIX: Single Appointment Time-Check Logic
+                if (infoRes.success) {
+                    let aptData = infoRes.info;
+                    const status = aptData.status || 'Scheduled';
+                    if (status === 'Scheduled' || status === 'Pending' || status === 'Confirmed') {
+                        const now = new Date();
+                        let aptDate = null;
+                        const rawDateStr = aptData.appointment_date || aptData.start_time;
+                        const rawTimeStr = aptData.appointment_time || aptData.time;
+
+                        if (rawDateStr) {
+                            if (typeof rawDateStr === 'string' && rawDateStr.includes('T')) {
+                                aptDate = new Date(rawDateStr); // Keep 'Z' intact
+                            } else if (rawDateStr && rawTimeStr) {
+                                const cleanDate = rawDateStr.split('T')[0];
+                                aptDate = new Date(`${cleanDate}T${rawTimeStr.trim()}`);
+                            } else {
+                                aptDate = new Date(rawDateStr);
+                            }
+                        }
+
+                        if (aptDate && !isNaN(aptDate.getTime())) {
+                            const completionTime = new Date(aptDate.getTime() + (35 * 60 * 1000));
+                            if (now > completionTime) {
+                                aptData = { ...aptData, status: 'Completed' }; // Disable action buttons by overriding status
+                            }
+                        }
+                    }
+                    setPatientInfo(aptData);
+                }
+
                 if (sympRes.success) setSymptoms(sympRes.symptoms);
                 if (medRes.success) setMedicalInfo(medRes.medicalInfo);
                 if (repRes.success) setReports(repRes.reports || []);
@@ -59,7 +89,6 @@ const DoctorAppointmentDetails = () => {
         (report.document_name || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    // THE FIX: Check for chief_complaint as well, because that is where the Bypassed Payment logic saves the reason string!
     const displaySymptoms = symptoms?.pre_consultation_symptoms || symptoms?.chief_complaint || patientInfo?.reason_for_visit || 'No symptoms reported by the patient.';
 
     return (
@@ -81,7 +110,6 @@ const DoctorAppointmentDetails = () => {
                     <ActionSidebar appointment={patientInfo} appointmentId={id} />
                 </div>
                 <div className="lg:col-span-2">
-                    {/* Pass the properly evaluated symptoms string */}
                     <SymptomsCard symptoms={displaySymptoms} />
                 </div>
                 <div className="lg:col-span-1">

@@ -30,7 +30,8 @@ export const doctorApi = {
     startVideoConsultation: async (id) => (await axiosInstance.post(`/doctors/appointments/${id}/start-video-consultation`)).data,
     rescheduleAppointment: async (id, data) => (await axiosInstance.put(`/doctors/appointments/${id}/reschedule-appointment`, data)).data,
     cancelAppointment: async (id) => (await axiosInstance.put(`/doctors/appointments/${id}/cancel-appointment`)).data,
-
+    submitPrescription: async (appointmentId, data) => (await axiosInstance.post(`/doctors/appointments/${appointmentId}/prescription`, data)).data,
+    
     // ==========================================
     // EARNINGS
     // ==========================================

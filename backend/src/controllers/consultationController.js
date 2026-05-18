@@ -46,6 +46,7 @@ exports.getCallToken = async (req, res) => {
         // Use the global User ID string for RTM Chat to map directly to their account
         const rtmToken = agoraService.generateRTMToken(userId.toString());
 
+       // ... (rest of the code)
         res.status(200).json({
             rtcToken,
             rtmToken,
@@ -55,6 +56,8 @@ exports.getCallToken = async (req, res) => {
             appId: process.env.AGORA_APP_ID
         });
     } catch (error) {
+        // 🚨 ADD THIS LINE RIGHT HERE:
+        console.error("🚨 CRITICAL AGORA ERROR:", error);
         res.status(500).json({ error: error.message });
     }
 };

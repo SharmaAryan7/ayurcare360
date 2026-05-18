@@ -456,6 +456,28 @@ exports.cancelAppointment = async (req, res) => {
 // 4. PRESCRIPTIONS
 // ==========================================
 
+
+exports.getPrescription = async (req, res) => {
+    try {
+        const { id } = req.params; // appointment_id
+        
+        // THE FIX: We must require the db instance here so we can run the query!
+        const db = require('../config/db'); 
+        
+        const query = `SELECT lifestyle_advice FROM prescriptions WHERE appointment_id = $1`;
+        const { rows } = await db.query(query, [id]);
+        
+        if (rows.length === 0) {
+            return res.json({ lifestyle_advice: null });
+        }
+        
+        res.json(rows[0]);
+    } catch (err) {
+        console.error("GET PRESCRIPTION ERROR:", err);
+        res.status(500).json({ error: 'Failed to fetch prescription' });
+    }
+};
+
 exports.getAllPrescriptions = async (req, res) => {
     try {
         const patientId = await getPatientId(req.user.id, res);

@@ -54,19 +54,23 @@ const AppointmentsTable = ({ appointments = [], activeTab }) => {
                         ) : (
                             paginatedAppointments.map((apt, index) => {
                                 const name = apt?.patient_name || 'Unknown Patient';
-                                const initials = typeof name === 'string' ? name.substring(0, 2).toUpperCase() : 'P';
 
-                                // THE FIX: Cleanly parsing the native Date
+                                // Cleanly parsing the native Date & Time
                                 const dateStr = apt?.appointment_date
                                     ? new Date(apt.appointment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                                     : 'N/A';
 
-                                // THE FIX: Cleanly parsing the native Time (Removed the 1970 string hack)
                                 const timeStr = apt?.appointment_time
                                     ? new Date(apt.appointment_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
                                     : 'N/A';
 
                                 const statusStr = apt?.status || 'Scheduled';
+
+                                // THE FIX: Dynamically fetch avatar and apply fallback
+                                const avatarUrl = apt?.patient_avatar || apt?.avatar || apt?.profile_image_url || apt?.patient_image || null;
+                                const displayAvatar = (avatarUrl && avatarUrl !== 'null') 
+                                    ? avatarUrl.replace(/"/g, '') 
+                                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=E5E7EB&color=4A7C59&bold=true`;
 
                                 return (
                                     <tr
@@ -76,9 +80,15 @@ const AppointmentsTable = ({ appointments = [], activeTab }) => {
                                     >
                                         <td className="px-8 py-4">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center font-bold text-[#4A7C59] text-sm group-hover:shadow-sm transition-all border border-[#EFEBE1]">
-                                                    {initials}
-                                                </div>
+                                                <img 
+                                                    src={displayAvatar}
+                                                    alt={name} 
+                                                    className="w-10 h-10 rounded-full object-cover bg-white shadow-sm border border-[#EFEBE1] shrink-0"
+                                                    onError={(e) => {
+                                                        e.target.onerror = null; 
+                                                        e.target.src = `https://ui-avatars.com/api/?name=Patient&background=E5E7EB&color=4A7C59`;
+                                                    }}
+                                                />
                                                 <span className="font-bold text-gray-900 text-sm">{name}</span>
                                             </div>
                                         </td>

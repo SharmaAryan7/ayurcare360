@@ -11,7 +11,6 @@ const PatientSummaryCard = ({ appointment }) => {
         ? new Date(appointment.appointment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
         : 'TBD';
 
-    // THE FIX: Direct ISO parsing, removing the '1970-01-01T' hack
     const timeStr = appointment.appointment_time
         ? new Date(appointment.appointment_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
         : 'TBD';
@@ -26,15 +25,26 @@ const PatientSummaryCard = ({ appointment }) => {
         }
     };
 
+    // THE FIX: Dynamically determine which avatar image to show
+    const avatarUrl = appointment.patient_avatar || appointment.avatar || appointment.profile_image_url || appointment.patient_image || null;
+    console.log("this is url", avatarUrl);
+    const displayAvatar = (avatarUrl && avatarUrl !== 'null') 
+        ? avatarUrl.replace(/"/g, '') 
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=E5E7EB&color=4A7C59&bold=true`;
+
     return (
         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center md:items-start gap-8 relative min-h-[16rem]">
 
             {/* Left: Patient Avatar */}
             <div className="w-36 h-36 rounded-full bg-[#FDF9EE] flex-shrink-0 overflow-hidden border-4 border-gray-50 shadow-sm self-center md:self-start">
                 <img
-                    src={`https://ui-avatars.com/api/?name=${name}&background=E5E7EB&color=4A7C59`}
+                    src={displayAvatar}
                     alt={name}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                        e.target.onerror = null; 
+                        e.target.src = `https://ui-avatars.com/api/?name=Patient&background=E5E7EB&color=4A7C59`;
+                    }}
                 />
             </div>
 

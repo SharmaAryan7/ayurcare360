@@ -55,6 +55,7 @@ import DoctorAppointmentDetails from './pages/doctor/DoctorAppointmentDetails';
 import DoctorEarnings from './pages/doctor/DoctorEarnings';
 import DoctorProfile from './pages/doctor/DoctorProfile';
 import DoctorSettings from './pages/doctor/DoctorSettings';
+import DoctorPrescriptionPage from './pages/doctor/DoctorPrescriptionPage';
 
 // Patient Pages
 import PatientLayout from './components/patient/layout/PatientLayout';
@@ -137,6 +138,7 @@ function App() {
               <Route path="dashboard" element={<DoctorDashboard />} />
               <Route path="appointments" element={<DoctorAppointments />} />
               <Route path="appointments/:id" element={<DoctorAppointmentDetails />} />
+              <Route path="appointments/:id/prescription" element={<DoctorPrescriptionPage />} />
               <Route path="earnings" element={<DoctorEarnings />} />
               <Route path="profile" element={<DoctorProfile />} />
               <Route path="settings" element={<DoctorSettings />} />

@@ -11,6 +11,12 @@ const doctorModel = {
         return rows[0];
     },
 
+    getProfileByUserId: async (userId) => {
+        const query = `SELECT id FROM DoctorProfiles WHERE user_id = $1`;
+        const { rows } = await db.query(query, [userId]);
+        return rows[0];
+    },
+    
     // ==========================================
     // DASHBOARD
     // ==========================================
@@ -54,6 +60,7 @@ const doctorModel = {
             SELECT 
                 a.id, 
                 u.full_name AS patient_name, 
+                p.settings->>'avatar' AS patient_avatar, /* <-- ADDED THIS LINE */
                 a.start_time AS appointment_date, 
                 a.start_time AS appointment_time, 
                 a.status,
@@ -118,6 +125,7 @@ const doctorModel = {
             SELECT 
                 a.id, 
                 u.full_name AS patient_name, 
+                p.settings->>'avatar' AS patient_avatar, /* <-- ADDED THIS LINE */
                 p.gender,
                 p.age,
                 a.start_time AS appointment_date, 
@@ -134,6 +142,49 @@ const doctorModel = {
         `;
         const { rows } = await db.query(query, [doctorId]);
         return rows;
+    },
+    
+    // ==========================================
+    // PRESCRIPTIONS
+    // ==========================================
+       
+
+    
+    // ==========================================
+    // PRESCRIPTIONS
+    // ==========================================
+    
+    submitPrescription: async (doctorId, appointmentId, medicines) => {
+        // 1. Get the patient ID
+        const aptRes = await db.query(`SELECT patient_id FROM Appointments WHERE id = $1 AND doctor_id = $2`, [appointmentId, doctorId]);
+        if (aptRes.rows.length === 0) throw new Error("Appointment not found");
+        const patientId = aptRes.rows[0].patient_id;
+
+        // 2. Stringify the dynamic array
+        const medsJson = JSON.stringify(medicines);
+
+        // 3. Check using the PLURAL, LOWERCASE 'prescriptions' table!
+        const checkRes = await db.query(`SELECT id FROM prescriptions WHERE appointment_id = $1`, [appointmentId]);
+        
+        if (checkRes.rows.length > 0) {
+            // Update using 'prescriptions'
+            await db.query(
+                `UPDATE prescriptions SET lifestyle_advice = $1 WHERE appointment_id = $2`, 
+                [medsJson, appointmentId]
+            );
+        } else {
+            // Insert using 'prescriptions'
+            await db.query(
+                `INSERT INTO prescriptions (appointment_id, patient_id, medicine_name, dosage, timing, duration, lifestyle_advice) 
+                 VALUES ($1, $2, 'DIGITAL_TABLE', 'N/A', 'N/A', 'N/A', $3)`,
+                [appointmentId, patientId, medsJson]
+            );
+        }
+        
+        // 4. Force the appointment status to Completed
+        await db.query(`UPDATE Appointments SET status = 'Completed' WHERE id = $1`, [appointmentId]);
+        
+        return true;
     },
 
     // ==========================================
@@ -510,7 +561,8 @@ const doctorModel = {
 
                 // Only add slots if the doctor checked this day
                 if (scheduleObj[dayName] === true) {
-                    for (let hour = 9; hour < 17; hour++) {
+                    // FIX: Changed from 9-17 to 0-24 for 24-hour slots
+                    for (let hour = 0; hour < 24; hour++) {
                         const start1 = `${datePrefix} ${String(hour).padStart(2, '0')}:00:00`;
                         const end1 = `${datePrefix} ${String(hour).padStart(2, '0')}:30:00`;
 
@@ -526,7 +578,22 @@ const doctorModel = {
                             )
                         `;
                         await client.query(insertQuery, [doctorId, start1, end1]);
-                        await client.query(insertQuery, [doctorId, start2, end2]);
+                        
+                        // Prevent generation of "24:30" slots by stopping the second half hour if it's 23:00 going into the next day
+                        if (hour !== 23) {
+                            await client.query(insertQuery, [doctorId, start2, end2]);
+                        } else {
+                            // Specifically handle the 23:30 to midnight slot if needed
+                            const endMidnight = `${datePrefix} 23:59:59`;
+                            const insertMidnightQuery = `
+                                INSERT INTO DoctorSlots (doctor_id, start_time, end_time, is_booked)
+                                SELECT $1, $2, $3, false
+                                WHERE NOT EXISTS (
+                                    SELECT 1 FROM DoctorSlots WHERE doctor_id = $1 AND start_time = $2
+                                )
+                            `;
+                            await client.query(insertMidnightQuery, [doctorId, start2, endMidnight]);
+                        }
                     }
                 }
             }

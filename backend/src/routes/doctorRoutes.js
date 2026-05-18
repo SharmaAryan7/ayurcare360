@@ -29,6 +29,7 @@ router.get('/appointments/:appointmentId/get-patient-medical-information', docto
 router.post('/appointments/:appointmentId/start-video-consultation', doctorController.startVideoConsultation);
 router.put('/appointments/:appointmentId/reschedule-appointment', doctorController.rescheduleAppointment);
 router.put('/appointments/:appointmentId/cancel-appointment', doctorController.cancelAppointment);
+router.post('/appointments/:id/prescription', doctorController.submitPrescription);
 
 // Earnings
 router.get('/earnings/get-total-earnings', doctorController.getTotalEarnings);

@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Video, Calendar as CalendarIcon, XCircle } from 'lucide-react';
+import { Video, XCircle } from 'lucide-react';
 import { doctorApi } from '../../../api/doctorApi';
+import { useNavigate } from 'react-router-dom'; 
 
 const ActionSidebar = ({ appointmentId, appointment }) => {
     const [isCancelling, setIsCancelling] = useState(false);
     const [isStarting, setIsStarting] = useState(false);
+    
+    const navigate = useNavigate();
 
     const isCancelled = appointment?.status === 'Cancelled';
     const isCompleted = appointment?.status === 'Completed';
@@ -13,11 +16,13 @@ const ActionSidebar = ({ appointmentId, appointment }) => {
         setIsStarting(true);
         try {
             const res = await doctorApi.startVideoConsultation(appointmentId);
-            if (res.success && res.link) {
-                window.open(res.link, '_blank');
+            
+            if (res.success) {
+                navigate(`/doctor/consultation/room/${appointmentId}`);
             }
         } catch (error) {
             console.error("Failed to start consultation", error);
+            alert("Unable to connect to the consultation room. Please try again.");
         } finally {
             setIsStarting(false);
         }
@@ -37,7 +42,7 @@ const ActionSidebar = ({ appointmentId, appointment }) => {
     };
 
     return (
-        <div className="flex flex-col gap-4 bg-[#f4eedd] p-10 rounded-3xl h-64">
+        <div className="flex flex-col gap-4 bg-[#f4eedd] p-10 rounded-3xl h-auto">
             <button
                 onClick={handleStartVideo}
                 disabled={isCancelled || isCompleted || isStarting}
@@ -45,14 +50,6 @@ const ActionSidebar = ({ appointmentId, appointment }) => {
             >
                 <Video size={14} />
                 <span>{isStarting ? 'Starting...' : 'Start Video Consultation'}</span>
-            </button>
-
-            <button
-                disabled={isCancelled || isCompleted}
-                className="w-full text-sm bg-[#8A79AF] hover:bg-[#726394] disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 px-6 rounded-full font-bold transition-colors flex items-center justify-center gap-3 shadow-sm"
-            >
-                <CalendarIcon size={14} />
-                <span>Reschedule</span>
             </button>
 
             <button

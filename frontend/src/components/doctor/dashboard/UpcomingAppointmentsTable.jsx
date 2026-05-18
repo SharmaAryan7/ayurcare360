@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Video, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const UpcomingAppointmentsTable = ({ appointments = [] }) => {
     const navigate = useNavigate();
+
+    // 🚨 DEBUGGING: Log the entire appointments array when it loads
+    useEffect(() => {
+        console.log("🚨 [UpcomingAppointmentsTable] Full Appointments Array:", appointments);
+    }, [appointments]);
 
     const getStatusStyle = (status) => {
         switch (status?.toLowerCase()) {
@@ -42,12 +47,24 @@ const UpcomingAppointmentsTable = ({ appointments = [] }) => {
 
                             {appointments.map((apt, index) => {
                                 const name = apt.patient_name || 'Unknown Patient';
-                                // THE FIX: Just pass the ISO string directly to new Date()
-                                const timeStr = apt.appointment_time
-                                    ? new Date(apt.appointment_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-                                    : 'N/A';
+                                
+                                // Clean the timezone bug from the time display
+                                let timeStr = 'N/A';
+                                if (apt.appointment_time) {
+                                    const cleanTime = apt.appointment_time.replace('Z', '');
+                                    timeStr = new Date(cleanTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                                }
+
                                 const type = apt.consultation_type || 'General';
                                 const status = apt.status || 'Scheduled';
+
+                                // THE FIX: If the backend fails to send the avatar (like in your console log), 
+                                // gracefully generate a beautiful UI-Avatar using their name!
+                                const avatarUrl = apt.patient_avatar || apt.avatar || apt.profile_image_url || apt.patient_image || null;
+                                
+                                const finalImageSrc = (avatarUrl && avatarUrl !== 'null') 
+                                    ? avatarUrl.replace(/"/g, '') // Clean quotes if it exists
+                                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=E5E7EB&color=4A7C59&bold=true`; // Fallback
 
                                 return (
                                     <tr
@@ -57,9 +74,16 @@ const UpcomingAppointmentsTable = ({ appointments = [] }) => {
                                     >
                                         <td className="px-3 md:px-3 py-2 rounded-l-xl md:rounded-l-2xl">
                                             <div className="flex items-center gap-3 md:gap-4">
-                                                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-600 text-xs md:text-sm group-hover:bg-white transition-colors border border-transparent group-hover:border-gray-200 shrink-0">
-                                                    {name.charAt(0)}
-                                                </div>
+                                                <img 
+                                                    src={finalImageSrc}
+                                                    alt={name} 
+                                                    className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover border border-gray-200 shadow-sm shrink-0 bg-white"
+                                                    onError={(e) => {
+                                                        // Extreme fallback if even ui-avatars fails
+                                                        e.target.onerror = null; 
+                                                        e.target.src = `https://ui-avatars.com/api/?name=Patient&background=E5E7EB&color=4A7C59`;
+                                                    }}
+                                                />
                                                 <span className="font-bold text-gray-900 text-xs md:text-sm truncate max-w-[120px] md:max-w-none">{name}</span>
                                             </div>
                                         </td>

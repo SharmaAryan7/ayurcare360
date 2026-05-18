@@ -36,15 +36,15 @@ router.put('/appointment/:id/cancel', ctrl.cancelAppointment);
 router.get('/appointment/:id/related-documents', ctrl.getDocuments);
 router.get('/appointment/:id/related-documents/download', ctrl.downloadDocument);
 
+// 🚨 THE FIX: Added the missing route to fetch the prescription data! 🚨
+router.get('/appointment/:id/prescription', ctrl.getPrescription);
+
 // ==========================================
 // 3. BOOK APPOINTMENT 
 // ==========================================
-
-// THE FIX: The POST route must be here!
 router.post('/book-appointment/create', ctrl.createAppointment);
 
 router.get('/book-appointment/view-all-practitioners', ctrl.getAllPractitioners);
-
 
 // Query params route (e.g., ?specialty=Vata)
 router.get('/book-appointment/view-all-practitioners/filter', ctrl.filterPractitioners);

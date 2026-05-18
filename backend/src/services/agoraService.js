@@ -1,11 +1,11 @@
 const { RtcTokenBuilder, RtmTokenBuilder } = require('agora-token');
 const logger = require('../utils/logger');
 
-class AgoraService {
+const agoraService = {
     /**
      * Generates an RTC token for a specific channel (Video/Audio).
      */
-    generateRTCToken(channelName, uid) {
+    generateRTCToken: (channelName, uid) => {
         try {
             const appId = process.env.AGORA_APP_ID;
             const appCertificate = process.env.AGORA_APP_CERTIFICATE;
@@ -54,12 +54,12 @@ class AgoraService {
             logger.error(`Agora RTC Token Generation Error: ${error.message}`);
             throw new Error('Could not generate video token.');
         }
-    }
+    },
 
     /**
      * Generates an RTM token for a specific user (Real-Time Messaging / Chat).
      */
-    generateRTMToken(userIdString) {
+    generateRTMToken: (userIdString) => {
         try {
             const appId = process.env.AGORA_APP_ID;
             const appCertificate = process.env.AGORA_APP_CERTIFICATE;
@@ -98,6 +98,6 @@ class AgoraService {
             throw new Error('Could not generate chat token.');
         }
     }
-}
+};
 
-module.exports = new AgoraService();
+module.exports = agoraService;

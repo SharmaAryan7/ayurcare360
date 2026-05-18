@@ -34,6 +34,7 @@ export const appointmentApi = {
     getPrakritiAnalysis: async () => (await axiosInstance.get('/book-appointment/prakriti-analysis')).data,
 
     // --- PRESCRIPTIONS ---
+    getPrescription: async (appointmentId) => (await axiosInstance.get(`/appointment/${appointmentId}/prescription`)).data,
     getAllPrescriptions: async () => (await axiosInstance.get('/prescription/all-prescriptions')).data,
     downloadPrescriptionPdf: async (id) => (await axiosInstance.get(`/prescription/all-prescription/${id}/view-pdf`, { responseType: 'blob' })).data,
     getAutomatedRefills: async () => (await axiosInstance.get('/prescription/automated-refills')).data,

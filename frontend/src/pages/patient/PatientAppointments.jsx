@@ -25,41 +25,32 @@ const PatientAppointments = () => {
         const dataArray = response.appointments || response.data || response || [];
         const validArray = Array.isArray(dataArray) ? dataArray : [];
 
-        // FRONTEND TIME-CHECK LOGIC (Bullet-proof Date Parser)
         const now = new Date();
         const processedArray = validArray.map(apt => {
           
-          // Check both status keys just in case
           const currentStatus = apt.status || apt.appointment_status;
           
           if (currentStatus === 'Scheduled' || currentStatus === 'Pending') {
             let aptDate = null;
+            const rawDateStr = apt.start_time || apt.scheduled_at || apt.appointment_date || apt.date;
+            const rawTimeStr = apt.appointment_time || apt.time;
 
-            // 1. Try to parse an exact ISO timestamp if available
-            if (apt.start_time || apt.scheduled_at) {
-                aptDate = new Date(apt.start_time || apt.scheduled_at);
-            } 
-            // 2. Try to combine split Date and Time fields
-            else {
-                const dateStr = apt.appointment_date || apt.date;
-                const timeStr = apt.appointment_time || apt.time;
-                
-                if (dateStr && timeStr) {
-                    const cleanDate = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
-                    // Combine date and time cleanly
-                    aptDate = new Date(`${cleanDate}T${timeStr.trim()}`);
-                } else if (dateStr) {
-                    aptDate = new Date(dateStr);
+            if (rawDateStr) {
+                if (typeof rawDateStr === 'string' && rawDateStr.includes('T')) {
+                    aptDate = new Date(rawDateStr); // THE FIX: Kept native timezone string
+                } 
+                else if (rawDateStr && rawTimeStr) {
+                    const cleanDate = rawDateStr.split('T')[0];
+                    aptDate = new Date(`${cleanDate}T${rawTimeStr.trim()}`);
+                } 
+                else {
+                    aptDate = new Date(rawDateStr);
                 }
             }
 
-            // ONLY apply the override if the Date successfully parsed
             if (aptDate && !isNaN(aptDate.getTime())) {
-                // Add 35 minutes (30 min consultation + 5 min buffer)
                 const completionTime = new Date(aptDate.getTime() + (35 * 60 * 1000));
-
                 if (now > completionTime) {
-                    // Override BOTH possible status keys to guarantee the UI catches it
                     return { ...apt, status: 'Completed', appointment_status: 'Completed' }; 
                 }
             }
@@ -86,7 +77,6 @@ const PatientAppointments = () => {
     const currentYear = currentDate.getFullYear();
 
     return appointmentsData.filter(apt => {
-      // Check the overridden status
       const status = (apt.status || apt.appointment_status || '').toLowerCase();
 
       if (activeTab !== 'all') {

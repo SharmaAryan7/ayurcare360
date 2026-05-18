@@ -44,8 +44,10 @@ const PrescriptionList = ({ prescriptions = [], isLoading }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {prescriptions.map((rx) => (
-        <div key={rx.id || rx._id} className="bg-white border border-[#EFEBE1] rounded-3xl p-6 hover:shadow-md transition-shadow relative overflow-hidden group">
+      {/* THE FIX: Added index parameter to the map loop */}
+      {prescriptions.map((rx, index) => (
+        /* THE FIX: Changed key to use rx.id or fallback to index dynamically */
+        <div key={rx.id || index} className="bg-white border border-[#EFEBE1] rounded-3xl p-6 hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-[#FDF9EE] rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
 
           <div className="flex justify-between items-start mb-6">
