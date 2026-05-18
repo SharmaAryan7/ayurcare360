@@ -26,7 +26,6 @@ const PatientSidebar = ({ isOpen, setIsOpen }) => {
     const navItems = [
         { name: 'Dashboard', path: '/patient/dashboard', icon: LayoutDashboard },
         { name: 'Appointments', path: '/patient/appointments', icon: Calendar },
-        { name: 'Prescriptions', path: '/patient/prescriptions', icon: FileText },
         { name: 'Health Records', path: '/patient/health-records', icon: Activity },
         { name: 'Pharmacy Orders', path: '/patient/pharmacy-orders', icon: ShoppingBag },
         { name: 'Pharmacy Store', path: '/patient/pharmacy-store', icon: Store },

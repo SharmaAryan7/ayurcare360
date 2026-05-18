@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Pill, AlertCircle, Download, FileText } from 'lucide-react';
 import { appointmentApi } from '../../../api/appointmentApi';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const PrescriptionCard = ({ appointmentId, status, appointmentDate, doctorName = "Your Doctor" }) => {
     const [medicines, setMedicines] = useState([]);
@@ -17,41 +17,34 @@ const PrescriptionCard = ({ appointmentId, status, appointmentDate, doctorName =
             }
             try {
                 const res = await appointmentApi.getPrescription(appointmentId);
-                
-                // ==========================================
-                // DEBUG LOGS - CHECK YOUR CONSOLE!
-                // ==========================================
-                console.log("=== RAW BACKEND RESPONSE ===", res);
-                
-                // Safely extract the payload
                 const payload = res?.data ? res.data : res;
-                console.log("=== EXTRACTED PAYLOAD ===", payload);
 
-                if (payload && payload.lifestyle_advice) {
-                    try {
-                        let parsedData = typeof payload.lifestyle_advice === 'string' 
-                            ? JSON.parse(payload.lifestyle_advice) 
-                            : payload.lifestyle_advice;
-                        
-                        if (typeof parsedData === 'string') {
-                            parsedData = JSON.parse(parsedData);
+                if (payload) {
+                    let finalArray = [];
+
+                    // Extract the JSON array from lifestyle_advice
+                    if (payload.lifestyle_advice) {
+                        try {
+                            const parsedData = typeof payload.lifestyle_advice === 'string' 
+                                ? JSON.parse(payload.lifestyle_advice) 
+                                : payload.lifestyle_advice;
+
+                            if (Array.isArray(parsedData)) {
+                                finalArray = parsedData;
+                            } else if (parsedData && Array.isArray(parsedData.medicines)) {
+                                finalArray = parsedData.medicines;
+                            }
+                        } catch (e) {
+                            console.log("lifestyle_advice is plain text, skipping JSON parse");
                         }
-
-                        let finalArray = [];
-                        if (Array.isArray(parsedData)) {
-                            finalArray = parsedData;
-                        } else if (parsedData && Array.isArray(parsedData.medicines)) {
-                            finalArray = parsedData.medicines;
-                        }
-
-                        console.log("=== FINAL MEDICINES ARRAY ===", finalArray);
-                        setMedicines(finalArray);
-
-                    } catch (e) {
-                        console.error("=== JSON PARSE ERROR ===", e);
                     }
-                } else {
-                    console.log("=== NO LIFESTYLE_ADVICE FOUND IN PAYLOAD ===");
+
+                    // Fallback for legacy rows
+                    if (finalArray.length === 0 && payload.medicine_name && payload.medicine_name !== 'DIGITAL_TABLE') {
+                        finalArray = [payload];
+                    }
+
+                    setMedicines(finalArray);
                 }
             } catch (err) {
                 console.error("=== API FETCH ERROR ===", err);
@@ -74,63 +67,70 @@ const PrescriptionCard = ({ appointmentId, status, appointmentDate, doctorName =
 
         try {
             const doc = new jsPDF();
+            const formattedDate = appointmentDate ? new Date(appointmentDate).toLocaleDateString() : new Date().toLocaleDateString();
+            const referenceId = `APT-${appointmentId.substring(0, 8).toUpperCase()}`;
             
-            doc.setFillColor(74, 124, 89);
-            doc.rect(0, 0, 210, 30, 'F');
+            // Header Background
+            doc.setFillColor(74, 124, 89); // #4A7C59
+            doc.rect(0, 0, 210, 35, 'F');
+            
+            // Header Text
             doc.setTextColor(255, 255, 255);
-            doc.setFontSize(22);
+            doc.setFontSize(24);
             doc.setFont("helvetica", "bold");
-            doc.text("AyurCure", 14, 20);
+            doc.text("AyurCure", 14, 23);
             
-            doc.setFontSize(10);
+            doc.setFontSize(12);
             doc.setFont("helvetica", "normal");
-            doc.text("Digital Prescription Recipient", 145, 20);
+            doc.text("Digital Prescription", 155, 22);
 
+            // Patient/Doctor Info Section
             doc.setTextColor(50, 50, 50);
             doc.setFontSize(12);
             doc.setFont("helvetica", "bold");
-            doc.text(`Doctor: Dr. ${doctorName}`, 14, 45);
+            doc.text(`Doctor: Dr. ${doctorName}`, 14, 50);
             
             doc.setFont("helvetica", "normal");
-            const formattedDate = appointmentDate ? new Date(appointmentDate).toLocaleDateString() : new Date().toLocaleDateString();
-            doc.text(`Date of Assessment: ${formattedDate}`, 14, 52);
-            doc.text(`Reference Identifier ID: ${appointmentId.substring(0, 8).toUpperCase()}`, 14, 59);
+            doc.setFontSize(10);
+            doc.text(`Date of Assessment: ${formattedDate}`, 14, 57);
+            doc.text(`Reference Identifier: ${referenceId}`, 14, 64);
 
-            const tableColumn = ["Medicine Name", "Tablets / Dosage", "Morning", "Noon", "Evening", "Night"];
-            const tableRows = [];
+            // Prepare Table Data
+            const tableColumn = ["Medicine Name", "Dosage", "Morning", "Noon", "Evening", "Night"];
+            const tableRows = medicines.map(med => [
+                med.medicineName || med.medicine_name || med.name || '-',
+                med.tablets || med.dosage || med.dose || '-',
+                evaluateTiming(med.morning) ? 'Yes' : '-',
+                evaluateTiming(med.noon) ? 'Yes' : '-',
+                evaluateTiming(med.evening) ? 'Yes' : '-',
+                evaluateTiming(med.night) ? 'Yes' : '-'
+            ]);
 
-            medicines.forEach(med => {
-                const medData = [
-                    med.medicineName || med.medicine_name || med.name || '-',
-                    med.tablets || med.dosage || med.dose || '-',
-                    evaluateTiming(med.morning) ? 'Yes' : '-',
-                    evaluateTiming(med.noon) ? 'Yes' : '-',
-                    evaluateTiming(med.evening) ? 'Yes' : '-',
-                    evaluateTiming(med.night) ? 'Yes' : '-'
-                ];
-                tableRows.push(medData);
-            });
-
-            doc.autoTable({
+            // Draw Table
+            autoTable(doc, {
                 head: [tableColumn],
                 body: tableRows,
-                startY: 70,
+                startY: 75,
                 theme: 'striped',
                 headStyles: { fillColor: [74, 124, 89], textColor: 255, fontStyle: 'bold' },
-                styles: { fontSize: 10, cellPadding: 5 },
-                alternateRowStyles: { fillColor: [253, 249, 238] },
+                styles: { fontSize: 10, cellPadding: 6, textColor: [50, 50, 50] },
+                alternateRowStyles: { fillColor: [253, 249, 238] }, // #FDF9EE
                 margin: { top: 10, left: 14, right: 14 }
             });
 
-            const finalY = doc.lastAutoTable.finalY || 70;
+            // Footer Section
+            const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY : 100;
             doc.setFontSize(10);
             doc.setTextColor(140, 140, 140);
-            doc.text("Thank you for using our telehealth portal. Wishing you a continuous path to holistic health.", 14, finalY + 20);
+            doc.setFont("helvetica", "italic");
+            doc.text("Thank you for using AyurCure. Wishing you a continuous path to holistic health.", 14, finalY + 20);
+            doc.text("*This is an electronically generated document and does not require a physical signature.", 14, finalY + 26);
             
-            doc.save(`Prescription_${appointmentId.substring(0, 8).toUpperCase()}.pdf`);
+            // Trigger Download
+            doc.save(`Prescription_${referenceId}.pdf`);
         } catch (error) {
-            console.error("Error building PDF artifact asset:", error);
-            alert("Failed to build PDF generation process. Please check layout structures.");
+            console.error("PDF Generation Error:", error);
+            alert("Failed to generate PDF. Please try again.");
         } finally {
             setIsDownloading(false);
         }

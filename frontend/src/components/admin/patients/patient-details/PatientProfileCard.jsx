@@ -4,11 +4,29 @@ import { Phone, Mail, MapPin, User as UserIcon } from 'lucide-react';
 const PatientProfileCard = ({ patient }) => {
   if (!patient) return null;
 
+  // Helper Function: Parse backend asset storage URL
+  const getAvatarUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    return `http://localhost:5000${path.startsWith('/') ? '' : '/'}${path}`;
+  };
+
+  const imgUrl = getAvatarUrl(patient.avatar || patient.profile_image || patient.image);
+
   return (
     <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-8 items-start h-full">
-      <div className="w-32 h-32 rounded-full bg-[#FDF9EE] text-[#4A7C59] flex items-center justify-center font-bold text-4xl border-4 border-[#4A7C59]/10 shrink-0">
-        {patient.full_name?.charAt(0) || 'P'}
-      </div>
+      {imgUrl ? (
+        <img 
+          src={imgUrl} 
+          alt={patient.full_name || 'Patient'} 
+          className="w-32 h-32 rounded-full object-cover border-4 border-[#4A7C59]/10 shrink-0"
+          onError={(e) => { e.target.style.display = 'none'; }}
+        />
+      ) : (
+        <div className="w-32 h-32 rounded-full bg-[#FDF9EE] text-[#4A7C59] flex items-center justify-center font-bold text-4xl border-4 border-[#4A7C59]/10 shrink-0">
+          {patient.full_name?.charAt(0) || 'P'}
+        </div>
+      )}
 
       <div className="flex-1 w-full">
         <div className="mb-6">
@@ -53,4 +71,5 @@ const PatientProfileCard = ({ patient }) => {
     </div>
   );
 };
+
 export default PatientProfileCard;

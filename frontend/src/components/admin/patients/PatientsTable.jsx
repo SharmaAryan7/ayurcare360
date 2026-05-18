@@ -12,6 +12,13 @@ const PatientsTable = ({ patients = [] }) => {
     return `AYUP-${uniquePart}`;
   };
 
+  // Helper Function: Parse backend asset storage URL
+  const getAvatarUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    return `http://localhost:5000${path.startsWith('/') ? '' : '/'}${path}`;
+  };
+
   const filteredPatients = patients.filter(patient =>
     (patient.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     // Updated search to filter by the new AYUP- ID format!
@@ -54,40 +61,53 @@ const PatientsTable = ({ patients = [] }) => {
             {filteredPatients.length === 0 ? (
               <tr><td colSpan="6" className="p-8 text-center text-gray-500">No patients found.</td></tr>
             ) : (
-              filteredPatients.map((patient) => (
-                <tr key={patient.id} className="hover:bg-gray-50/50 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-[#FDF9EE] text-[#4A7C59] flex items-center justify-center font-bold text-sm border border-[#4A7C59]/20">
-                        {patient.name?.charAt(0) || 'P'}
+              filteredPatients.map((patient) => {
+                const imgUrl = getAvatarUrl(patient.avatar || patient.profile_image || patient.image);
+                
+                return (
+                  <tr key={patient.id} className="hover:bg-gray-50/50 transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        {imgUrl ? (
+                          <img 
+                            src={imgUrl} 
+                            alt={patient.name || 'Patient'} 
+                            className="w-10 h-10 rounded-full object-cover border border-[#4A7C59]/20"
+                            onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'; }}
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-[#FDF9EE] text-[#4A7C59] flex items-center justify-center font-bold text-sm border border-[#4A7C59]/20">
+                            {patient.name?.charAt(0) || 'P'}
+                          </div>
+                        )}
+                        <span className="font-bold text-gray-900 text-sm">{patient.name}</span>
                       </div>
-                      <span className="font-bold text-gray-900 text-sm">{patient.name}</span>
-                    </div>
-                  </td>
-                  
-                  {/* NEW AYUP- ID Format Applied Here! */}
-                  <td className="px-6 py-4 text-sm font-bold text-gray-500">
-                    {generateRegistryId(patient.id)}
-                  </td>
-                  
-                  <td className="px-6 py-4 text-sm font-medium text-gray-600">{patient.age} / {patient.gender}</td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-600">{patient.phone || 'N/A'}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider
-                      ${patient.clinical_status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                      {patient.clinical_status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      {/* Using your exact link format, no three-dots! */}
-                      <Link to={`/admin/patients/${patient.id}`} className="text-[#4A7C59] hover:text-[#3A6447] text-xs font-bold px-3 py-1.5 bg-[#4A7C59]/10 rounded-full transition-colors">
-                        View Profile
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                    </td>
+                    
+                    {/* NEW AYUP- ID Format Applied Here! */}
+                    <td className="px-6 py-4 text-sm font-bold text-gray-500">
+                      {generateRegistryId(patient.id)}
+                    </td>
+                    
+                    <td className="px-6 py-4 text-sm font-medium text-gray-600">{patient.age} / {patient.gender}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-600">{patient.phone || 'N/A'}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider
+                        ${patient.clinical_status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                        {patient.clinical_status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        {/* Using your exact link format, no three-dots! */}
+                        <Link to={`/admin/patients/${patient.id}`} className="text-[#4A7C59] hover:text-[#3A6447] text-xs font-bold px-3 py-1.5 bg-[#4A7C59]/10 rounded-full transition-colors">
+                          View Profile
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

@@ -460,18 +460,19 @@ exports.cancelAppointment = async (req, res) => {
 exports.getPrescription = async (req, res) => {
     try {
         const { id } = req.params; // appointment_id
-        
-        // THE FIX: We must require the db instance here so we can run the query!
         const db = require('../config/db'); 
         
-        const query = `SELECT lifestyle_advice FROM prescriptions WHERE appointment_id = $1`;
+        // FIX: Select all columns, not just lifestyle_advice
+        const query = `SELECT * FROM prescriptions WHERE appointment_id = $1`;
         const { rows } = await db.query(query, [id]);
         
         if (rows.length === 0) {
             return res.json({ lifestyle_advice: null });
         }
         
-        res.json(rows[0]);
+        // If you dropped the UNIQUE constraint and allow multiple rows, return all rows
+        // Otherwise, return rows[0] if it's a single row
+        res.json(rows.length > 1 ? rows : rows[0]);
     } catch (err) {
         console.error("GET PRESCRIPTION ERROR:", err);
         res.status(500).json({ error: 'Failed to fetch prescription' });

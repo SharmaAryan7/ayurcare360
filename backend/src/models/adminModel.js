@@ -48,7 +48,7 @@ const adminModel = {
 
     getRecentPatients: async () => {
         const query = `
-            SELECT p.id, u.full_name as name, p.patient_display_id, p.clinical_status as status, p.updated_at as last_visit 
+            SELECT p.id, u.full_name as name, p.patient_display_id, p.clinical_status as status, p.updated_at as last_visit, p.settings->>'avatar' as avatar 
             FROM PatientProfiles p 
             JOIN Users u ON p.user_id = u.id 
             WHERE u.role = 'patient'
@@ -105,7 +105,6 @@ const adminModel = {
             ]);
             const newUserId = userRes.rows[0].id;
 
-            // 🚨 FIX: Updated 'avatar' to 'profile_image_url' and 'clinic_address' to 'location' to match schema
             const profileQuery = `
                 INSERT INTO DoctorProfiles 
                 (user_id, specialization, experience_years, qualifications, registration_number, consultation_fee, bio, profile_image_url, location, verification_status) 
@@ -262,7 +261,6 @@ const adminModel = {
             const aboutText = data.about || data.bio;
             const addressText = data.clinical_address || data.clinic_address || data.address;
 
-            // 🚨 FIX: Updated 'avatar' to 'profile_image_url' and 'clinic_address' to 'location' to match schema
             const profileQuery = `
                 UPDATE DoctorProfiles 
                 SET specialization = COALESCE($1, specialization), 
@@ -301,7 +299,7 @@ const adminModel = {
     // ==========================================
     getAllPatients: async () => {
         const query = `
-            SELECT p.id, p.patient_display_id, u.full_name as name, p.age, p.gender, u.phone, p.clinical_status, p.updated_at as last_visit
+            SELECT p.id, p.patient_display_id, u.full_name as name, p.age, p.gender, u.phone, p.clinical_status, p.updated_at as last_visit, p.settings->>'avatar' as avatar
             FROM PatientProfiles p 
             JOIN Users u ON p.user_id = u.id
             WHERE u.role = 'patient' 
@@ -327,7 +325,7 @@ const adminModel = {
 
     getPatientPersonalInfo: async (patientId) => {
         const query = `
-            SELECT u.full_name, u.email, u.phone, p.age, p.gender, p.blood_group, p.address, p.emergency_contact_name, p.emergency_contact_phone, p.patient_display_id
+            SELECT u.full_name, u.email, u.phone, p.age, p.gender, p.blood_group, p.address, p.emergency_contact_name, p.emergency_contact_phone, p.patient_display_id, p.settings->>'avatar' as avatar
             FROM PatientProfiles p 
             JOIN Users u ON p.user_id = u.id 
             WHERE p.id = $1

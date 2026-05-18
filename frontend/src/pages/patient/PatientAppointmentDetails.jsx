@@ -10,6 +10,7 @@ import DoctorInfoCard from '../../components/patient/appointment-details/DoctorI
 import DocumentsList from '../../components/patient/appointment-details/DocumentsList';
 import CancelAppointmentModal from '../../components/patient/appointment-details/CancelAppointmentModal';
 import CancelSuccessModal from '../../components/patient/appointment-details/CancelSuccessModal';
+import PrescriptionCard from '../../components/patient/appointment-details/PrescriptionCard';
 
 const PatientAppointmentDetails = () => {
     const { id } = useParams();
@@ -46,7 +47,7 @@ const PatientAppointmentDetails = () => {
 
                     if (rawDateStr) {
                         if (typeof rawDateStr === 'string' && rawDateStr.includes('T')) {
-                            aptDate = new Date(rawDateStr); // THE FIX: Left 'Z' intact for proper timezone sync
+                            aptDate = new Date(rawDateStr);
                         } else if (rawDateStr && rawTimeStr) {
                             const cleanDate = rawDateStr.split('T')[0];
                             aptDate = new Date(`${cleanDate}T${rawTimeStr.trim()}`);
@@ -140,6 +141,18 @@ const PatientAppointmentDetails = () => {
 
                 <div className="lg:col-span-1">
                     {practitioner ? <DoctorInfoCard info={practitioner} /> : null}
+                </div>
+
+                {/* THE PRESCRIPTION CARD LAYOUT BLOCK */}
+                <div className="lg:col-span-3 mt-4">
+                    {actions ? (
+                        <PrescriptionCard 
+                            appointmentId={id} 
+                            status={actions.status} 
+                            appointmentDate={actions.start_time || actions.scheduled_at}
+                            doctorName={practitioner?.doctor_name}
+                        />
+                    ) : null}
                 </div>
 
                 <div className="lg:col-span-3">

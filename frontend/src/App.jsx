@@ -163,7 +163,7 @@ function App() {
               </Route>
               <Route path="pharmacy-orders" element={<PharmacyOrdersPage />} />
               <Route path="pharmacy-orders/:id" element={<PatientOrderDetailsPage />} />
-              <Route path="prescriptions" element={<PatientPrescriptionsPage />} />
+              {/* <Route path="prescriptions" element={<PatientPrescriptionsPage />} /> */}
               <Route path="health-records" element={<PatientHealthReportsPage />} />
               <Route path="profile" element={<PatientProfilePage />} />
               <Route path="settings" element={<PatientSettingsPage />} />

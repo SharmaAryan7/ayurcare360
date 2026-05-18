@@ -44,9 +44,7 @@ const PrescriptionList = ({ prescriptions = [], isLoading }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* THE FIX: Added index parameter to the map loop */}
       {prescriptions.map((rx, index) => (
-        /* THE FIX: Changed key to use rx.id or fallback to index dynamically */
         <div key={rx.id || index} className="bg-white border border-[#EFEBE1] rounded-3xl p-6 hover:shadow-md transition-shadow relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-[#FDF9EE] rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
 
@@ -56,9 +54,11 @@ const PrescriptionList = ({ prescriptions = [], isLoading }) => {
                 <Pill size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">{rx.medicine_name}</h3>
+                <h3 className="text-lg font-bold text-gray-900">
+                  {rx.medicine_name === 'DIGITAL_TABLE' ? 'Digital Prescription Plan' : rx.medicine_name}
+                </h3>
                 <span className="text-[10px] font-extrabold text-[#8B6A47] uppercase tracking-widest bg-[#FDF9EE] px-2 py-0.5 rounded-full mt-1 inline-block border border-[#F5E6CC]">
-                  {rx.dosage || 'Standard Dose'}
+                  {rx.medicine_name === 'DIGITAL_TABLE' ? 'View Details' : (rx.dosage || 'Standard Dose')}
                 </span>
               </div>
             </div>
