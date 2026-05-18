@@ -78,40 +78,48 @@ const RecentReportsList = ({ reportsData = [], isLoading }) => {
     setCurrentPage(1);
   };
 
-  // Robust File Download Handler
+  // Pure Frontend Download Handler (No Backend API needed)
   const handleDownload = async (report) => {
     const meta = getReportMeta(report);
     setDownloadingId(report.id);
 
     try {
-      // 1. Try to fetch the blob directly from your backend API
-      const blob = await patientApi.downloadReport(report.id);
+      if (!report.file_url) {
+        throw new Error("No file URL found in database record.");
+      }
+
+      // 1. Fetch the file directly from the URL as a binary Blob
+      const response = await fetch(report.file_url);
+      if (!response.ok) throw new Error("Could not fetch the file directly.");
       
-      // 2. Create a hidden element to trigger the browser's download manager
-      const url = window.URL.createObjectURL(new Blob([blob]));
+      const blob = await response.blob();
+      
+      // 2. Create a local URL for the downloaded Blob
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       
-      // Determine file extension (fallback to .pdf if unknown)
-      const extension = report.file_url?.split('.').pop().toLowerCase() || 'pdf';
+      // 3. Determine file extension and force download
+      const extension = report.file_url.split('.').pop().toLowerCase();
       const cleanExtension = ['pdf', 'png', 'jpg', 'jpeg'].includes(extension) ? extension : 'pdf';
       
       link.setAttribute('download', `${meta.name.replace(/\s+/g, '_')}.${cleanExtension}`);
-      
       document.body.appendChild(link);
       link.click();
       
-      // 3. Cleanup
+      // 4. Clean up the DOM
       link.remove();
       window.URL.revokeObjectURL(url);
 
     } catch (error) {
-      console.error("API Download Failed. Attempting Fallback:", error);
-      // Fallback: If backend fails (e.g., file is on S3 and fs.existsSync fails in backend)
+      console.error("Frontend Blob Fetch Failed. Opening in new tab instead:", error);
+      
+      // Fallback: If the browser blocks the direct fetch (due to strict CORS rules on external buckets),
+      // just open the file directly in a new browser tab so the patient can still see/save it.
       if (report.file_url) {
         window.open(report.file_url, '_blank');
       } else {
-        alert("Unable to locate the file for download.");
+        alert("The file link is missing. Please re-upload the document.");
       }
     } finally {
       setDownloadingId(null);

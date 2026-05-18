@@ -308,7 +308,7 @@ class PatientModel {
 
     static async getRecentReports(patientId) {
         const query = `
-            SELECT id, document_name, document_type, uploaded_at 
+            SELECT id, document_name, document_type, uploaded_at, file_url 
             FROM PatientDocuments 
             WHERE patient_id = $1 
             ORDER BY uploaded_at DESC 
@@ -330,7 +330,7 @@ class PatientModel {
 
     static async filterReports(patientId, reportName, doctorName, date) {
         let query = `
-            SELECT pd.id, pd.document_name, pd.document_type, pd.uploaded_at 
+            SELECT pd.id, pd.document_name, pd.document_type, pd.uploaded_at, pd.file_url 
             FROM PatientDocuments pd
             WHERE pd.patient_id = $1
         `;
